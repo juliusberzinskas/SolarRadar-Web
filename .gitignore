@@ -33,7 +33,4 @@ dist-ssr
 serviceAccountKey.json
 
 # Internal documentation (contains Firebase project identifiers and architecture details)
-DATABASE_SCHEMA.md
-DESIGN_SYSTEM.md
-DOCUMENTATION.md
-MOBILE_INTEGRATION.md
+context/
