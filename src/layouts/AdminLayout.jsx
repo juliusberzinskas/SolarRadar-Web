@@ -4,6 +4,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
   Avatar,
+  Badge,
   Box,
   CssBaseline,
   Divider,
@@ -20,7 +21,8 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase";
+import { collection, onSnapshot } from "firebase/firestore";
+import { auth, db } from "../firebase";
 import { useAuth } from "../contexts/AuthContext";
 
 import MenuIcon from "@mui/icons-material/Menu";
@@ -71,11 +73,55 @@ function getInitials(str) {
     : str.slice(0, 2).toUpperCase();
 }
 
+const LS_KEY = "solarradar_reports_last_seen";
+
+function useNewReportsCount() {
+  const [count, setCount] = React.useState(0);
+  const location = useLocation();
+
+  // Mark as seen when on the reports page
+  React.useEffect(() => {
+    if (location.pathname === "/reports") {
+      localStorage.setItem(LS_KEY, new Date().toISOString());
+      setCount(0);
+    }
+  }, [location.pathname]);
+
+  // Listen to reports collection — count new submissions AND technician edits
+  React.useEffect(() => {
+    const unsub = onSnapshot(collection(db, "reports"), (snap) => {
+      const lastSeen = localStorage.getItem(LS_KEY);
+      const lastSeenDate = lastSeen ? new Date(lastSeen) : null;
+
+      const newCount = snap.docs.filter((d) => {
+        const data = d.data();
+
+        const toDate = (v) => v ? (v.toDate ? v.toDate() : new Date(v)) : null;
+        const submittedAt = toDate(data.submittedAt);
+        const editedAt    = toDate(data.editedAt);
+
+        const isNewSubmission = submittedAt && (!lastSeenDate || submittedAt > lastSeenDate);
+        const isNewEdit       = editedAt    && (!lastSeenDate || editedAt    > lastSeenDate);
+
+        return isNewSubmission || isNewEdit;
+      }).length;
+
+      if (window.location.pathname !== "/reports") {
+        setCount(newCount);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  return count;
+}
+
 function SidebarContent({ onNavigate }) {
   const location = useLocation();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const newReportsCount = useNewReportsCount();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -115,7 +161,26 @@ function SidebarContent({ onNavigate }) {
               }}
             >
               <ListItemIcon sx={{ minWidth: 38, color: active ? MENU_ICON_ACTIVE : MENU_ICON }}>
-                {item.icon}
+                {item.path === "/reports" && newReportsCount > 0 ? (
+                  <Badge
+                    badgeContent={newReportsCount > 9 ? "9+" : newReportsCount}
+                    sx={{
+                      "& .MuiBadge-badge": {
+                        backgroundColor: "#ef4444",
+                        color: "#fff",
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        minWidth: 16,
+                        height: 16,
+                        padding: "0 4px",
+                      },
+                    }}
+                  >
+                    {item.icon}
+                  </Badge>
+                ) : (
+                  item.icon
+                )}
               </ListItemIcon>
               <ListItemText
                 primary={t(item.labelKey)}

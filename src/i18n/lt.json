@@ -46,6 +46,11 @@
     "high": "Aukštas"
   },
 
+  "mountingType": {
+    "Stogo": "Stogo",
+    "Žemės": "Žemės"
+  },
+
   "jobType": {
     "inverter_fault": "Inverterio gedimas",
     "communication": "Ryšio problema",

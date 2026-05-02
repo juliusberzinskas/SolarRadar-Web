@@ -7,6 +7,7 @@ import {
   where,
   onSnapshot,
   updateDoc,
+  deleteDoc,
   doc,
   setDoc,
   getDocs,
@@ -14,7 +15,7 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth, db, firebaseApiKey } from "../firebase";
+import { auth, db } from "../firebase";
 import {
   Alert,
   Box,
@@ -176,6 +177,10 @@ function TechniciansTab() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
+  const [openDelete, setOpenDelete] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     const q = query(collection(db, "users"), where("role", "==", "technician"));
     const unsub = onSnapshot(
@@ -284,7 +289,7 @@ function TechniciansTab() {
       const tempPassword = "Tmp@" + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 4).toUpperCase();
 
       const res = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseApiKey}`,
+        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${import.meta.env.VITE_FIREBASE_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -333,6 +338,33 @@ function TechniciansTab() {
       setOpenEdit(false);
     } catch (e) {
       setSaveError(e.message);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      // Delete Firestore profile
+      await deleteDoc(doc(db, "users", editingRow.id));
+
+      // Delete Firebase Auth account via Cloud Function
+      await fetch(
+        "https://europe-west1-solarradar-8882e.cloudfunctions.net/deleteAuthUser",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid: editingRow.id }),
+        }
+      );
+
+      setOpenDelete(false);
+      setOpenEdit(false);
+      setDeleteConfirmText("");
+      setEditingRow(null);
+    } catch (e) {
+      setSaveError(e.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -487,8 +519,48 @@ function TechniciansTab() {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            color="error"
+            onClick={() => { setDeleteConfirmText(""); setOpenDelete(true); }}
+            sx={{ mr: "auto" }}
+          >
+            Delete
+          </Button>
           <Button onClick={() => setOpenEdit(false)}>{t("common.cancel")}</Button>
           <Button variant="contained" onClick={handleUpdate}>{t("pages.members.update")}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={openDelete} onClose={() => setOpenDelete(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ color: "error.main" }}>Delete technician?</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            This will permanently delete <b>{editingRow?.displayName || editingRow?.email}</b> and their login account. This cannot be undone.
+          </Alert>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            Type <b>Delete</b> to confirm:
+          </Typography>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Delete"
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            autoComplete="off"
+          />
+          {saveError && <Alert severity="error" sx={{ mt: 1 }}>{saveError}</Alert>}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setOpenDelete(false)}>{t("common.cancel")}</Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={deleteConfirmText !== "Delete" || deleting}
+            onClick={handleDelete}
+          >
+            {deleting ? "Deleting..." : "Delete"}
+          </Button>
         </DialogActions>
       </Dialog>
 

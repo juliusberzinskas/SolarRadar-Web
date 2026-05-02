@@ -8,7 +8,7 @@ export default function Timesheets() {
       </Typography>
 
       <Alert severity="info">
-        Šis modulis bus įgyvendintas vėliau (stub).
+        vėliau
       </Alert>
     </Box>
   );

@@ -40,8 +40,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-const REGIONS = ["Kaunas", "Vilnius", "Klaipėda", "Šiauliai", "Panevėžys", "Alytus"];
-const MOUNTING_TYPES = ["Stogo", "Žemės", "Plūduriuojantis", "Automobilių stoginė"];
+const REGIONS = ["Alytus", "Druskininkai", "Kaunas", "Klaipėda", "Marijampolė", "Mažeikiai", "Panevėžys", "Plungė", "Šiauliai", "Tauragė", "Telšiai", "Utena", "Vilnius"];
+const MOUNTING_TYPES = ["Stogo", "Žemės"];
 
 function StatusChip({ value }) {
   const { t } = useTranslation();
@@ -102,53 +102,125 @@ function InfoTab({ site, siteId }) {
     onChange: (e) => setForm((p) => ({ ...p, [field]: e.target.value })),
   });
 
+  const m = site.mounting ?? {};
+
+  const infoRows = [
+    { label: t("pages.siteDetail.info.name"),     value: site.name },
+    { label: t("pages.siteDetail.info.address"),  value: site.address },
+    { label: t("pages.siteDetail.info.region"),   value: site.region },
+    { label: t("pages.siteDetail.info.status"),   value: site.status ? t(`status.${site.status}`, site.status) : null },
+    { label: t("pages.siteDetail.info.capacity"), value: site.capacityKw != null ? `${site.capacityKw} kW` : null },
+  ];
+
+  const mountingRows = [
+    { label: t("pages.siteDetail.mounting.panelType"),    value: m.panelType },
+    { label: t("pages.siteDetail.mounting.panelCount"),   value: m.panelCount != null ? String(m.panelCount) : null },
+    { label: t("pages.siteDetail.mounting.inverterModel"),value: m.inverterModel },
+    { label: t("pages.siteDetail.mounting.mountingType"), value: m.mountingType ? t(`mountingType.${m.mountingType}`, m.mountingType) : null },
+    { label: t("pages.siteDetail.mounting.installDate"),  value: m.installationDate },
+  ];
+
   return (
-    <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-      <Stack spacing={2.5}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <TextField label={t("pages.siteDetail.info.name")} fullWidth {...f("name")} />
-          <TextField label={t("pages.siteDetail.info.address")} fullWidth {...f("address")} />
+    <Stack spacing={3}>
+      {/* ── Edit form ── */}
+      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+        <Stack spacing={2.5}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField label={t("pages.siteDetail.info.name")} fullWidth {...f("name")} />
+            <TextField label={t("pages.siteDetail.info.address")} fullWidth {...f("address")} />
+          </Stack>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <FormControl fullWidth>
+              <InputLabel>{t("pages.siteDetail.info.region")}</InputLabel>
+              <Select label={t("pages.siteDetail.info.region")} value={form.region} onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}>
+                {REGIONS.map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>{t("pages.siteDetail.info.status")}</InputLabel>
+              <Select label={t("pages.siteDetail.info.status")} value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}>
+                <MenuItem value="active">{t("status.active")}</MenuItem>
+                <MenuItem value="inactive">{t("status.inactive")}</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+
+          <TextField
+            label={t("pages.siteDetail.info.capacity")}
+            type="number"
+            inputProps={{ step: "0.1" }}
+            fullWidth
+            {...f("capacityKw")}
+          />
+
+          {saveError && <Alert severity="error">{saveError}</Alert>}
+          {saved && <Alert severity="success">{t("common.savedOk")}</Alert>}
+
+          <Box>
+            <Button
+              variant="contained"
+              startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? t("common.saving") : t("common.saveChanges")}
+            </Button>
+          </Box>
         </Stack>
+      </Paper>
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <FormControl fullWidth>
-            <InputLabel>{t("pages.siteDetail.info.region")}</InputLabel>
-            <Select label={t("pages.siteDetail.info.region")} value={form.region} onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}>
-              {REGIONS.map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth>
-            <InputLabel>{t("pages.siteDetail.info.status")}</InputLabel>
-            <Select label={t("pages.siteDetail.info.status")} value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}>
-              <MenuItem value="active">{t("status.active")}</MenuItem>
-              <MenuItem value="inactive">{t("status.inactive")}</MenuItem>
-            </Select>
-          </FormControl>
-        </Stack>
+      {/* ── Read-only overview ── */}
+      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+        <Typography fontWeight={700} sx={{ mb: 2 }}>
+          {site.name}
+        </Typography>
 
-        <TextField
-          label={t("pages.siteDetail.info.capacity")}
-          type="number"
-          inputProps={{ step: "0.1" }}
-          fullWidth
-          {...f("capacityKw")}
-        />
+        <Stack spacing={0}>
+          {/* Site info rows */}
+          {infoRows.map(({ label, value }) => (
+            <Stack
+              key={label}
+              direction="row"
+              sx={{ py: 1, borderBottom: "1px solid", borderColor: "divider" }}
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ width: 200, flexShrink: 0 }}>
+                {label}
+              </Typography>
+              <Typography variant="body2" fontWeight={500}>
+                {value || "—"}
+              </Typography>
+            </Stack>
+          ))}
 
-        {saveError && <Alert severity="error">{saveError}</Alert>}
-        {saved && <Alert severity="success">{t("common.savedOk")}</Alert>}
-
-        <Box>
-          <Button
-            variant="contained"
-            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-            onClick={handleSave}
-            disabled={saving}
+          {/* Divider with mounting label */}
+          <Stack
+            direction="row"
+            sx={{ py: 1.5, mt: 1, borderBottom: "1px solid", borderColor: "divider" }}
           >
-            {saving ? t("common.saving") : t("common.saveChanges")}
-          </Button>
-        </Box>
-      </Stack>
-    </Paper>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ width: 200, flexShrink: 0 }}>
+              {t("pages.siteDetail.tabs.mounting")}
+            </Typography>
+          </Stack>
+
+          {/* Mounting rows */}
+          {mountingRows.map(({ label, value }) => (
+            <Stack
+              key={label}
+              direction="row"
+              sx={{ py: 1, borderBottom: "1px solid", borderColor: "divider", "&:last-of-type": { borderBottom: "none" } }}
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ width: 200, flexShrink: 0 }}>
+                {label}
+              </Typography>
+              <Typography variant="body2" fontWeight={500}>
+                {value || "—"}
+              </Typography>
+            </Stack>
+          ))}
+        </Stack>
+      </Paper>
+    </Stack>
   );
 }
 
@@ -244,7 +316,7 @@ function MountingTab({ site, siteId }) {
           <FormControl fullWidth>
             <InputLabel>{t("pages.siteDetail.mounting.mountingType")}</InputLabel>
             <Select label={t("pages.siteDetail.mounting.mountingType")} value={form.mountingType} onChange={(e) => setForm((p) => ({ ...p, mountingType: e.target.value }))}>
-              {MOUNTING_TYPES.map((mt) => <MenuItem key={mt} value={mt}>{mt}</MenuItem>)}
+              {MOUNTING_TYPES.map((mt) => <MenuItem key={mt} value={mt}>{t(`mountingType.${mt}`, mt)}</MenuItem>)}
             </Select>
           </FormControl>
         </Stack>

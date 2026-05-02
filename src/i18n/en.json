@@ -46,6 +46,11 @@
     "high": "High"
   },
 
+  "mountingType": {
+    "Stogo": "Roof",
+    "Žemės": "Ground"
+  },
+
   "jobType": {
     "inverter_fault": "Inverter fault",
     "communication": "Communication issue",
@@ -363,15 +368,13 @@
 
     "settings": {
       "title": "Settings",
-      "subtitle": "System settings (language, profile, etc.)",
+      "subtitle": "System settings",
       "lang": {
         "title": "Language",
-        "choose": "Choose language",
-        "note": "Selection is saved in the browser (localStorage) and will be applied the next time the page is opened."
+        "choose": "Choose language"
       },
       "account": {
-        "title": "Account",
-        "desc": "Admin email and other profile info will be shown here later."
+        "title": "Account"
       },
       "demo": {
         "title": "Demo data",

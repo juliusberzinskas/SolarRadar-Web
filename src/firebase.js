@@ -4,12 +4,12 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAie1LY7vEQ3eLxOo-f2JrwYI_Fm6lGU40",
-  authDomain: "solarradar-8882e.firebaseapp.com",
-  projectId: "solarradar-8882e",
-  storageBucket: "solarradar-8882e.firebasestorage.app",
-  messagingSenderId: "1017230591284",
-  appId: "1:1017230591284:web:79567a12cb9722f841d161"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
@@ -17,4 +17,3 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const firebaseApiKey = firebaseConfig.apiKey;

@@ -22,3 +22,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Firebase Admin SDK service account keys — NEVER commit these
+*-firebase-adminsdk-*.json
+serviceAccountKey.json
+
+# Internal documentation (contains Firebase project identifiers and architecture details)
+DATABASE_SCHEMA.md
+DESIGN_SYSTEM.md
+DOCUMENTATION.md
+MOBILE_INTEGRATION.md

@@ -32,10 +32,12 @@ import {
   MenuItem,
   Paper,
   Select,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import PageHeader from "../components/PageHeader";
 import FilterBar from "../components/FilterBar";
 import dayjs from "dayjs";
@@ -130,6 +132,22 @@ export default function Reports() {
   }, [reports, search, statusFilter, siteFilter]);
 
   const columns = useMemo(() => [
+    {
+      field: "editFlag",
+      headerName: "",
+      width: 50,
+      sortable: false,
+      filterable: false,
+      renderCell: (p) =>
+        p.value ? (
+          <Tooltip title={`Edited by ${p.row.editedByTechnicianName || "technician"}`} arrow>
+            <DriveFileRenameOutlineIcon
+              fontSize="small"
+              sx={{ color: "#ef4444", mt: "2px" }}
+            />
+          </Tooltip>
+        ) : null,
+    },
     {
       field: "technicianName",
       headerName: t("pages.reports.col.technician"),

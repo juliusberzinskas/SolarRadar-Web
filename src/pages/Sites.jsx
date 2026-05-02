@@ -5,6 +5,7 @@ import {
   collection,
   onSnapshot,
   addDoc,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import {
@@ -26,12 +27,21 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
-import MapIcon from "@mui/icons-material/Map";
 
 import PageHeader from "../components/PageHeader";
 import FilterBar from "../components/FilterBar";
 
-const REGIONS = ["Kaunas", "Vilnius", "Klaipėda", "Šiauliai", "Panevėžys", "Alytus"];
+async function getNextSiteId() {
+  const snap = await getDocs(collection(db, "sites"));
+  const nums = snap.docs
+    .map((d) => d.data().siteId)
+    .filter((id) => /^\d+$/.test(id))
+    .map((id) => parseInt(id, 10));
+  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  return String(next).padStart(3, "0");
+}
+
+const REGIONS = ["Alytus", "Druskininkai", "Kaunas", "Klaipėda", "Marijampolė", "Mažeikiai", "Panevėžys", "Plungė", "Šiauliai", "Tauragė", "Telšiai", "Utena", "Vilnius"];
 
 const emptyForm = () => ({
   name: "",
@@ -93,7 +103,7 @@ export default function Sites() {
 
   const columns = useMemo(
     () => [
-      { field: "id", headerName: "ID", width: 140 },
+      { field: "siteId", headerName: "ID", width: 100, renderCell: (p) => <b>{p.value ?? "—"}</b> },
       { field: "name", headerName: t("pages.sites.col.name"), flex: 1, minWidth: 200 },
       { field: "address", headerName: t("pages.sites.col.address"), flex: 1, minWidth: 200 },
       { field: "region", headerName: t("pages.sites.col.region"), width: 130 },
@@ -144,8 +154,10 @@ export default function Sites() {
   const handleCreate = async () => {
     setSaveError("");
     try {
+      const siteId = await getNextSiteId();
       await addDoc(collection(db, "sites"), {
         ...buildDocData(form),
+        siteId,
         createdAt: new Date().toISOString().slice(0, 10),
       });
       setOpenCreate(false);
@@ -213,11 +225,6 @@ export default function Sites() {
           icon: <AddIcon />,
           onClick: openCreateDialog,
         }}
-        actions={
-          <Button variant="outlined" startIcon={<MapIcon />}>
-            Map view (stub)
-          </Button>
-        }
       />
 
       <FilterBar search={search} onSearchChange={setSearch} onReset={onReset}>
