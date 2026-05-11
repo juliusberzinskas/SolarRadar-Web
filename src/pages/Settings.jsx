@@ -14,13 +14,18 @@ import {
   MenuItem,
   Select,
   Stack,
+  Switch,
   Typography,
 } from "@mui/material";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 import PageHeader from "../components/PageHeader";
+import { useAppTheme } from "../contexts/ThemeContext";
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { darkMode, toggleDarkMode } = useAppTheme();
   const [lang, setLang] = useState(i18n.language || "en");
 
   const handleLogout = async () => {
@@ -54,6 +59,35 @@ export default function Settings() {
       />
 
       <Stack spacing={2}>
+        {/* Appearance */}
+        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+          <CardContent>
+            <Typography fontWeight={800} sx={{ mb: 2 }}>
+              {t("pages.settings.appearance.title")}
+            </Typography>
+
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Stack direction="row" alignItems="center" gap={1.5}>
+                {darkMode
+                  ? <DarkModeIcon sx={{ color: "primary.main" }} />
+                  : <LightModeIcon sx={{ color: "warning.main" }} />
+                }
+                <Box>
+                  <Typography variant="body2" fontWeight={600}>
+                    {t("pages.settings.appearance.darkMode")}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {darkMode
+                      ? t("pages.settings.appearance.on")
+                      : t("pages.settings.appearance.off")}
+                  </Typography>
+                </Box>
+              </Stack>
+              <Switch checked={darkMode} onChange={toggleDarkMode} />
+            </Stack>
+          </CardContent>
+        </Card>
+
         {/* Language */}
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
@@ -75,10 +109,6 @@ export default function Settings() {
                 ))}
               </Select>
             </FormControl>
-
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-              {t("")}
-            </Typography>
           </CardContent>
         </Card>
 
@@ -89,10 +119,6 @@ export default function Settings() {
               {t("pages.settings.account.title")}
             </Typography>
 
-            <Typography variant="body2" color="text.secondary">
-              {t("")}
-            </Typography>
-
             <Divider sx={{ my: 2 }} />
 
             <Button variant="contained" color="error" onClick={handleLogout}>
@@ -100,7 +126,6 @@ export default function Settings() {
             </Button>
           </CardContent>
         </Card>
-
       </Stack>
     </Box>
   );

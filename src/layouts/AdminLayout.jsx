@@ -38,21 +38,15 @@ import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 
 const drawerWidth = 260;
 
-// ── Colours ───────────────────────────────────────────────────────────────────
-const SIDEBAR_BG        = "#111827";
-const TOPBAR_BG         = "#ffffff";
-const CONTENT_BG        = "#f0f4f8";
-
-const MENU_TEXT         = "rgba(255,255,255,0.72)";
-const MENU_TEXT_ACTIVE  = "#ffffff";
-const MENU_ICON         = "rgba(255,255,255,0.48)";
-const MENU_ICON_ACTIVE  = "#60a5fa";
-
-const MENU_HOVER_BG     = "rgba(255,255,255,0.06)";
-const MENU_ACTIVE_BG    = "rgba(96,165,250,0.14)";
-const MENU_ACTIVE_LINE  = "#3b82f6";
-
-const SIDEBAR_DIVIDER   = "rgba(255,255,255,0.08)";
+// ── Sidebar colours (sidebar is always dark in both modes) ────────────────────
+const MENU_TEXT        = "rgba(255,255,255,0.72)";
+const MENU_TEXT_ACTIVE = "#ffffff";
+const MENU_ICON        = "rgba(255,255,255,0.48)";
+const MENU_ICON_ACTIVE = "#60a5fa";
+const MENU_HOVER_BG    = "rgba(255,255,255,0.06)";
+const MENU_ACTIVE_BG   = "rgba(96,165,250,0.14)";
+const MENU_ACTIVE_LINE = "#3b82f6";
+const SIDEBAR_DIVIDER  = "rgba(255,255,255,0.08)";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const menuItems = [
@@ -247,7 +241,11 @@ function SidebarContent({ onNavigate }) {
 
 export default function AdminLayout() {
   const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const SIDEBAR_BG = isDark ? "#0f172a" : "#111827";
+  const CONTENT_BG = theme.palette.background.default;
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { t } = useTranslation();
   const { user, profile } = useAuth();
@@ -283,9 +281,7 @@ export default function AdminLayout() {
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
-          backgroundColor: TOPBAR_BG,
           color: "text.primary",
-          borderBottom: "1px solid rgba(0,0,0,0.08)",
         }}
       >
         <Toolbar sx={{ gap: 1 }}>
@@ -330,7 +326,15 @@ export default function AdminLayout() {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: "block", md: "none" },
-            "& .MuiDrawer-paper": { width: drawerWidth, backgroundColor: SIDEBAR_BG, borderRight: "none" },
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+              backgroundColor: SIDEBAR_BG,
+              borderRight: "none",
+              boxShadow: isDark
+                ? "4px 0 24px rgba(0,0,0,0.6), 1px 0 0 rgba(255,255,255,0.04)"
+                : "4px 0 24px rgba(0,0,0,0.15)",
+              transition: "background-color 0.25s ease",
+            },
           }}
         >
           {drawerContent}
@@ -341,7 +345,15 @@ export default function AdminLayout() {
           variant="permanent"
           sx={{
             display: { xs: "none", md: "block" },
-            "& .MuiDrawer-paper": { width: drawerWidth, backgroundColor: SIDEBAR_BG, borderRight: "none" },
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+              backgroundColor: SIDEBAR_BG,
+              borderRight: "none",
+              boxShadow: isDark
+                ? "4px 0 24px rgba(0,0,0,0.6), 1px 0 0 rgba(255,255,255,0.04)"
+                : "4px 0 24px rgba(0,0,0,0.12)",
+              transition: "background-color 0.25s ease",
+            },
           }}
           open
         >
@@ -356,7 +368,8 @@ export default function AdminLayout() {
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
           minHeight: "100vh",
-          backgroundColor: CONTENT_BG,
+          bgcolor: CONTENT_BG,
+          transition: "background-color 0.25s ease",
           pt: 9,
           px: { xs: 2, md: 3 },
           pb: 3,

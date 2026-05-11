@@ -15,9 +15,11 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth, db } from "../firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { auth, db, storage } from "../firebase";
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Checkbox,
@@ -31,6 +33,7 @@ import {
   FormGroup,
   IconButton,
   InputLabel,
+  LinearProgress,
   MenuItem,
   Paper,
   Select,
@@ -40,11 +43,13 @@ import {
   Tab,
   Tabs,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -57,6 +62,14 @@ import { useAuth } from "../contexts/AuthContext";
 
 // ─── Expertise config ─────────────────────────────────────────────────────────
 export const EXPERTISE_KEYS = ["electrician", "inv_elect", "mount_spec", "panel_spec"];
+
+function getInitials(str) {
+  if (!str) return "?";
+  const parts = str.trim().split(/\s+/);
+  return parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : str.slice(0, 2).toUpperCase();
+}
 
 function yearsInCompany(hiredAt) {
   if (!hiredAt) return null;
@@ -181,6 +194,9 @@ function TechniciansTab() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] = useState(0);
+
   useEffect(() => {
     const q = query(collection(db, "users"), where("role", "==", "technician"));
     const unsub = onSnapshot(
@@ -217,6 +233,21 @@ function TechniciansTab() {
   const columns = useMemo(
     () => [
       { field: "memberId", headerName: t("pages.members.col.id"), width: 90, renderCell: (p) => <b>{p.value ?? "—"}</b> },
+      {
+        field: "photoUrl",
+        headerName: "",
+        width: 72,
+        sortable: false,
+        filterable: false,
+        renderCell: (p) => (
+          <Avatar
+            src={p.row.photoUrl || undefined}
+            sx={{ width: 48, height: 48, bgcolor: "#3b82f6", fontSize: "1rem" }}
+          >
+            {!p.row.photoUrl && getInitials(p.row.displayName || p.row.email)}
+          </Avatar>
+        ),
+      },
       { field: "displayName", headerName: t("pages.members.col.name"), width: 200 },
       { field: "email", headerName: t("pages.members.col.email"), width: 200 },
       {
@@ -368,6 +399,33 @@ function TechniciansTab() {
     }
   };
 
+  const handlePhotoUpload = async (file) => {
+    if (!file || !editingRow) return;
+    setPhotoUploading(true);
+    setPhotoUploadProgress(0);
+    setSaveError("");
+    try {
+      const storageRef = ref(storage, `technicians/${editingRow.id}/photo`);
+      const task = uploadBytesResumable(storageRef, file);
+      await new Promise((resolve, reject) => {
+        task.on(
+          "state_changed",
+          (snap) => setPhotoUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+          reject,
+          resolve
+        );
+      });
+      const url = await getDownloadURL(storageRef);
+      await updateDoc(doc(db, "users", editingRow.id), { photoUrl: url });
+      setEditingRow((prev) => ({ ...prev, photoUrl: url }));
+    } catch (e) {
+      setSaveError(e.message);
+    } finally {
+      setPhotoUploading(false);
+      setPhotoUploadProgress(0);
+    }
+  };
+
   return (
     <>
       <Box sx={{ mt: 2 }}>
@@ -411,8 +469,11 @@ function TechniciansTab() {
               loading={loadingData}
               pageSizeOptions={[5, 10, 25]}
               initialState={{ pagination: { paginationModel: { pageSize: 10, page: 0 } } }}
-              getRowHeight={() => "auto"}
-              sx={{ "& .MuiDataGrid-cell": { alignItems: "center", display: "flex" } }}
+              getRowHeight={() => 72}
+              sx={{
+                "& .MuiDataGrid-cell": { alignItems: "center", display: "flex" },
+                "& .MuiDataGrid-row": { py: 0.5 },
+              }}
               disableRowSelectionOnClick
             />
           </Box>
@@ -479,6 +540,45 @@ function TechniciansTab() {
             <Typography variant="body2" color="text.secondary">
               {t("pages.members.dialog.idLabel")}<b>{editingRow?.memberId ?? editingRow?.id}</b>
             </Typography>
+
+            {/* Profile photo upload */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Avatar
+                src={editingRow?.photoUrl || undefined}
+                sx={{ width: 72, height: 72, bgcolor: "#3b82f6", fontSize: "1.6rem" }}
+              >
+                {!editingRow?.photoUrl && getInitials(form.displayName || editingRow?.email)}
+              </Avatar>
+              <Box>
+                <input
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="tech-photo-upload"
+                  type="file"
+                  onChange={(e) => handlePhotoUpload(e.target.files[0])}
+                />
+                <Tooltip title={t("pages.members.form.photoTooltip")}>
+                  <label htmlFor="tech-photo-upload">
+                    <Button
+                      component="span"
+                      variant="outlined"
+                      size="small"
+                      startIcon={<PhotoCameraIcon />}
+                      disabled={photoUploading}
+                    >
+                      {t("pages.members.form.uploadPhoto")}
+                    </Button>
+                  </label>
+                </Tooltip>
+                {photoUploading && (
+                  <LinearProgress
+                    variant="determinate"
+                    value={photoUploadProgress}
+                    sx={{ mt: 1, width: 180, borderRadius: 1 }}
+                  />
+                )}
+              </Box>
+            </Box>
             <TextField
               label={t("pages.members.form.name")}
               value={form.displayName}

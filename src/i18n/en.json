@@ -301,7 +301,9 @@
         "hiredAt": "Hire date",
         "expertise": "Expertise",
         "active": "Active",
-        "inactive": "Inactive"
+        "inactive": "Inactive",
+        "uploadPhoto": "Upload photo",
+        "photoTooltip": "Upload a profile photo (JPG, PNG)"
       },
       "creating": "Creating...",
       "update": "Update",
@@ -369,6 +371,12 @@
     "settings": {
       "title": "Settings",
       "subtitle": "System settings",
+      "appearance": {
+        "title": "Appearance",
+        "darkMode": "Dark mode",
+        "on": "Dark theme is on",
+        "off": "Light theme is on"
+      },
       "lang": {
         "title": "Language",
         "choose": "Choose language"

@@ -5,19 +5,14 @@ import "./index.css";
 import "./i18n";
 
 import { AuthProvider } from "./contexts/AuthContext.jsx";
-import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
-
-const theme = createTheme({
-  shape: { borderRadius: 12 },
-});
+import { AppThemeProvider } from "./contexts/ThemeContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <AppThemeProvider>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </ThemeProvider>
+    </AppThemeProvider>
   </React.StrictMode>
 );

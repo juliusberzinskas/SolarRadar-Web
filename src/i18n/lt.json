@@ -301,7 +301,9 @@
         "hiredAt": "Įdarbinimo data",
         "expertise": "Kompetencija",
         "active": "Aktyvus",
-        "inactive": "Neaktyvus"
+        "inactive": "Neaktyvus",
+        "uploadPhoto": "Įkelti nuotrauką",
+        "photoTooltip": "Įkelti profilio nuotrauką (JPG, PNG)"
       },
       "creating": "Kuriama...",
       "update": "Atnaujinti",
@@ -369,6 +371,12 @@
     "settings": {
       "title": "Nustatymai",
       "subtitle": "Sistemos nustatymai (kalba, profilis ir kt.)",
+      "appearance": {
+        "title": "Išvaizda",
+        "darkMode": "Tamsioji tema",
+        "on": "Tamsioji tema įjungta",
+        "off": "Šviesioji tema įjungta"
+      },
       "lang": {
         "title": "Kalba / Language",
         "choose": "Pasirinkti kalbą",
