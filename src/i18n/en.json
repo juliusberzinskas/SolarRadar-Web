@@ -377,6 +377,14 @@
         "on": "Dark theme is on",
         "off": "Light theme is on"
       },
+      "notifications": {
+        "title": "Push Notifications",
+        "label": "Report notifications",
+        "on": "You will be notified when a technician submits or edits a report",
+        "off": "Enable to receive alerts when reports are submitted or edited",
+        "unsupported": "Push notifications are not supported in this browser",
+        "denied": "Notifications are blocked. Please allow them in your browser settings and reload."
+      },
       "lang": {
         "title": "Language",
         "choose": "Choose language"

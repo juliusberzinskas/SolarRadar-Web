@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -19,13 +20,17 @@ import {
 } from "@mui/material";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
 import PageHeader from "../components/PageHeader";
 import { useAppTheme } from "../contexts/ThemeContext";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { darkMode, toggleDarkMode } = useAppTheme();
+  const { supported, permission, enabled, loading, toggle } = usePushNotifications();
   const [lang, setLang] = useState(i18n.language || "en");
 
   const handleLogout = async () => {
@@ -51,6 +56,9 @@ export default function Settings() {
     localStorage.setItem("lang", newLang);
   };
 
+  const notifDenied = permission === "denied";
+  const notifUnsupported = !supported;
+
   return (
     <Box>
       <PageHeader
@@ -59,7 +67,7 @@ export default function Settings() {
       />
 
       <Stack spacing={2}>
-        {/* Appearance */}
+        {/* ── Appearance ── */}
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography fontWeight={800} sx={{ mb: 2 }}>
@@ -70,8 +78,7 @@ export default function Settings() {
               <Stack direction="row" alignItems="center" gap={1.5}>
                 {darkMode
                   ? <DarkModeIcon sx={{ color: "primary.main" }} />
-                  : <LightModeIcon sx={{ color: "warning.main" }} />
-                }
+                  : <LightModeIcon sx={{ color: "warning.main" }} />}
                 <Box>
                   <Typography variant="body2" fontWeight={600}>
                     {t("pages.settings.appearance.darkMode")}
@@ -88,7 +95,49 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Language */}
+        {/* ── Push Notifications ── */}
+        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+          <CardContent>
+            <Typography fontWeight={800} sx={{ mb: 2 }}>
+              {t("pages.settings.notifications.title")}
+            </Typography>
+
+            {notifUnsupported ? (
+              <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                {t("pages.settings.notifications.unsupported")}
+              </Alert>
+            ) : notifDenied ? (
+              <Alert severity="error" sx={{ borderRadius: 2 }}>
+                {t("pages.settings.notifications.denied")}
+              </Alert>
+            ) : (
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Stack direction="row" alignItems="center" gap={1.5}>
+                  {enabled
+                    ? <NotificationsActiveIcon sx={{ color: "primary.main" }} />
+                    : <NotificationsOffIcon sx={{ color: "text.secondary" }} />}
+                  <Box>
+                    <Typography variant="body2" fontWeight={600}>
+                      {t("pages.settings.notifications.label")}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {enabled
+                        ? t("pages.settings.notifications.on")
+                        : t("pages.settings.notifications.off")}
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Switch
+                  checked={enabled}
+                  disabled={loading}
+                  onChange={toggle}
+                />
+              </Stack>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ── Language ── */}
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography fontWeight={800} sx={{ mb: 1 }}>
@@ -112,7 +161,7 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Account */}
+        {/* ── Account ── */}
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography fontWeight={800} sx={{ mb: 1 }}>

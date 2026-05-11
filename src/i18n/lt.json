@@ -377,6 +377,14 @@
         "on": "Tamsioji tema įjungta",
         "off": "Šviesioji tema įjungta"
       },
+      "notifications": {
+        "title": "Pranešimai",
+        "label": "Ataskaitų pranešimai",
+        "on": "Gausite pranešimus, kai technikas pateikia ar redaguoja ataskaitą",
+        "off": "Įjunkite, kad gautumėte perspėjimus apie pateiktas ar redaguotas ataskaitas",
+        "unsupported": "Šis naršyklė nepalaiko pranešimų",
+        "denied": "Pranešimai užblokuoti. Leiskite juos naršyklės nustatymuose ir perkraukite puslapį."
+      },
       "lang": {
         "title": "Kalba / Language",
         "choose": "Pasirinkti kalbą",
