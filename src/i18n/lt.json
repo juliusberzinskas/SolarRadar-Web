@@ -385,9 +385,9 @@
       "subtitle": "Sistemos nustatymai (kalba, profilis ir kt.)",
       "appearance": {
         "title": "Išvaizda",
-        "darkMode": "Tamsioji tema",
-        "on": "Tamsioji tema įjungta",
-        "off": "Šviesioji tema įjungta"
+        "darkMode": "Juodas režimas",
+        "on": "Juodas režimas įjungtas",
+        "off": "Šviesusis režimas įjungtas"
       },
       "notifications": {
         "title": "Pranešimai",

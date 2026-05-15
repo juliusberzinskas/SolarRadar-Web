@@ -127,9 +127,9 @@ function KpiCard({ label, count, icon, accentColor, loading }) {
 }
 
 // ── Chart helpers ─────────────────────────────────────────────────────────────
-function ChartPanel({ title, subtitle, children, loading, sx }) {
+function ChartPanel({ title, subtitle, children, loading, compact, sx }) {
   return (
-    <Paper variant="outlined" sx={{ borderRadius: 2, p: 2.5, ...sx }}>
+    <Paper variant="outlined" sx={{ borderRadius: 2, p: compact ? 1.5 : 2.5, ...sx }}>
       <Box sx={{ mb: 2 }}>
         <Typography fontWeight={700} fontSize="0.9rem">{title}</Typography>
         {subtitle && (
@@ -200,8 +200,8 @@ function DonutChart({ data, total, centerLabel }) {
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={54}
-              outerRadius={80}
+              innerRadius={46}
+              outerRadius={68}
               paddingAngle={3}
               dataKey="value"
               startAngle={90}
@@ -477,6 +477,7 @@ export default function Dashboard() {
               title={t("pages.dashboard.charts.statusBreakdown.title")}
               subtitle={t("pages.dashboard.charts.statusBreakdown.subtitle")}
               loading={loadingJobs}
+              compact
             >
               <DonutChart
                 data={statusChartData}
@@ -551,6 +552,7 @@ export default function Dashboard() {
               title={t("pages.dashboard.charts.reportOutcomes.title")}
               subtitle={t("pages.dashboard.charts.reportOutcomes.subtitle")}
               loading={loadingReports}
+              compact
             >
               <DonutChart
                 data={reportOutcomes}
