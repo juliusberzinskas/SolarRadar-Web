@@ -84,7 +84,19 @@
       },
       "recentJobs": "Recent jobs",
       "recentJobsCaption": "Last {{count}} added jobs",
-      "noJobs": "No jobs — first create demo data in Settings."
+      "noJobs": "No jobs — first create demo data in Settings.",
+      "charts": {
+        "title": "Analytics",
+        "subtitle": "Performance overview for the selected period",
+        "noData": "No data for this period",
+        "total": "total",
+        "resolved": "resolved",
+        "reports": "reports",
+        "resolvedPerMonth": { "title": "Jobs Resolved per Month", "subtitle": "Completed jobs trend" },
+        "statusBreakdown":  { "title": "Job Status", "subtitle": "Current distribution" },
+        "topTechnicians":   { "title": "Top 3 Technicians", "subtitle": "By reports submitted" },
+        "reportOutcomes":   { "title": "Report Outcomes", "subtitle": "Quality of submitted work" }
+      }
     },
 
     "sites": {

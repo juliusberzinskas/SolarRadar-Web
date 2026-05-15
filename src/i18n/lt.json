@@ -84,7 +84,19 @@
       },
       "recentJobs": "Naujausi darbai",
       "recentJobsCaption": "Paskutiniai {{count}} pridėtų darbų",
-      "noJobs": "Nėra darbų — pirmiausia sukurkite demo duomenis Nustatymuose."
+      "noJobs": "Nėra darbų — pirmiausia sukurkite demo duomenis Nustatymuose.",
+      "charts": {
+        "title": "Analitika",
+        "subtitle": "Veiklos apžvalga pasirinktam laikotarpiui",
+        "noData": "Nėra duomenų šiam laikotarpiui",
+        "total": "iš viso",
+        "resolved": "išspręsta",
+        "reports": "ataskaitos",
+        "resolvedPerMonth": { "title": "Išspręsti darbai per mėnesį", "subtitle": "Atliktų darbų tendencija" },
+        "statusBreakdown":  { "title": "Darbų statusas", "subtitle": "Dabartinis pasiskirstymas" },
+        "topTechnicians":   { "title": "Top 3 technikai", "subtitle": "Pagal pateiktų ataskaitų skaičių" },
+        "reportOutcomes":   { "title": "Ataskaitų rezultatai", "subtitle": "Pateiktų darbų kokybė" }
+      }
     },
 
     "sites": {
