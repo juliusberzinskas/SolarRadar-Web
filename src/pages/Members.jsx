@@ -374,6 +374,14 @@ function TechniciansTab() {
 
   const handlePhotoUpload = async (file) => {
     if (!file || !editingRow) return;
+    if (!file.type.startsWith("image/")) {
+      setSaveError("Only image files are allowed.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setSaveError("Image must be under 5 MB.");
+      return;
+    }
     setPhotoUploading(true);
     setPhotoUploadProgress(0);
     setSaveError("");

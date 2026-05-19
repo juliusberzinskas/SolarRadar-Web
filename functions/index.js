@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
@@ -8,19 +9,24 @@ const { getFirestore }       = require("firebase-admin/firestore");
 
 initializeApp();
 
+async function requireAdmin(request) {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Must be signed in.");
+  const snap = await getFirestore().collection("users").doc(request.auth.uid).get();
+  const role = snap.data()?.role;
+  if (role !== "admin" && role !== "superadmin")
+    throw new HttpsError("permission-denied", "Admin access required.");
+}
+
 // ── Callable: create Firebase Auth user (avoids signing out the current admin) ─
 exports.createAuthUser = onCall(
   { region: "europe-west1" },
   async (request) => {
-    if (!request.auth) throw new HttpsError("unauthenticated", "Must be signed in.");
+    await requireAdmin(request);
 
     const { email } = request.data;
     if (!email) throw new HttpsError("invalid-argument", "email is required.");
 
-    const tempPassword =
-      "Tmp@" +
-      Math.random().toString(36).slice(2, 10) +
-      Math.random().toString(36).slice(2, 4).toUpperCase();
+    const tempPassword = "Tmp@" + crypto.randomBytes(10).toString("base64url");
 
     try {
       const user = await getAuth().createUser({ email, password: tempPassword });
@@ -37,7 +43,7 @@ exports.createAuthUser = onCall(
 exports.deleteAuthUser = onCall(
   { region: "europe-west1" },
   async (request) => {
-    if (!request.auth) throw new HttpsError("unauthenticated", "Must be signed in.");
+    await requireAdmin(request);
 
     const { uid } = request.data;
     if (!uid) throw new HttpsError("invalid-argument", "uid is required.");

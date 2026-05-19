@@ -581,6 +581,12 @@ function PhotosTab({ siteId }) {
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
+    const invalid = files.find((f) => !f.type.startsWith("image/") || f.size > 10 * 1024 * 1024);
+    if (invalid) {
+      setUploadError(!invalid.type.startsWith("image/") ? "Only image files are allowed." : "Each image must be under 10 MB.");
+      e.target.value = "";
+      return;
+    }
     setUploading(true);
     setUploadError("");
     setUploadProgress(0);
