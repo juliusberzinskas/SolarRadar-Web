@@ -153,6 +153,7 @@ const emptyAdminForm = () => ({
 });
 
 const createAuthUser = httpsCallable(functions, "createAuthUser");
+const deleteAuthUserFn = httpsCallable(functions, "deleteAuthUser");
 
 // Returns next sequential member ID like SR01, SR02, SR03 ...
 async function getNextMemberId() {
@@ -358,15 +359,7 @@ function TechniciansTab() {
       // Delete Firestore profile
       await deleteDoc(doc(db, "users", editingRow.id));
 
-      // Delete Firebase Auth account via Cloud Function
-      await fetch(
-        "https://europe-west1-solarradar-8882e.cloudfunctions.net/deleteAuthUser",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uid: editingRow.id }),
-        }
-      );
+      await deleteAuthUserFn({ uid: editingRow.id });
 
       setOpenDelete(false);
       setOpenEdit(false);

@@ -1,5 +1,6 @@
-const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp }      = require("firebase-admin/app");
 const { getAuth }            = require("firebase-admin/auth");
 const { getMessaging }       = require("firebase-admin/messaging");
@@ -32,19 +33,21 @@ exports.createAuthUser = onCall(
   }
 );
 
-// ── HTTP: delete Firebase Auth user ──────────────────────────────────────────
-exports.deleteAuthUser = onRequest(
-  { region: "europe-west1", cors: true },
-  async (req, res) => {
-    if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
-    const { uid } = req.body;
-    if (!uid) { res.status(400).json({ error: "Missing uid" }); return; }
+// ── Callable: delete Firebase Auth user ──────────────────────────────────────
+exports.deleteAuthUser = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Must be signed in.");
+
+    const { uid } = request.data;
+    if (!uid) throw new HttpsError("invalid-argument", "uid is required.");
+
     try {
       await getAuth().deleteUser(uid);
-      res.status(200).json({ success: true });
+      return { success: true };
     } catch (err) {
       console.error("deleteAuthUser error:", err);
-      res.status(500).json({ error: err.message });
+      throw new HttpsError("internal", err.message);
     }
   }
 );
@@ -91,6 +94,32 @@ async function notifyAdmins({ title, body, link, reportId }) {
     if (cleaned.length !== arr.length) await d.ref.update({ fcmTokens: cleaned });
   }
 }
+
+// ── Scheduled: delete archived jobs older than 14 days (runs daily at 03:00) ──
+exports.cleanupArchivedJobs = onSchedule(
+  { schedule: "0 3 * * *", timeZone: "Europe/Vilnius", region: "europe-west1" },
+  async () => {
+    const db = getFirestore();
+    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+    const snap = await db
+      .collection("jobs")
+      .where("archived", "==", true)
+      .where("archivedAt", "<", cutoff)
+      .get();
+
+    if (snap.empty) return;
+
+    const BATCH_SIZE = 490;
+    for (let i = 0; i < snap.docs.length; i += BATCH_SIZE) {
+      const batch = db.batch();
+      snap.docs.slice(i, i + BATCH_SIZE).forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+
+    console.log(`cleanupArchivedJobs: deleted ${snap.size} expired job(s).`);
+  }
+);
 
 // ── Firestore trigger: new report submitted ───────────────────────────────────
 exports.notifyAdminOnReportSubmit = onDocumentCreated(

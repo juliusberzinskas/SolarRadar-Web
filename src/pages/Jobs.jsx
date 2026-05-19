@@ -7,8 +7,6 @@ import {
   onSnapshot,
   addDoc,
   getDocs,
-  deleteDoc,
-  doc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
@@ -202,19 +200,6 @@ export default function Jobs() {
     return () => unsub();
   }, []);
 
-  // Auto-cleanup: delete archived jobs older than 2 weeks when archive tab opens
-  useEffect(() => {
-    if (mainTab !== 1 || jobs.length === 0) return;
-    const cutoff = dayjs().subtract(14, "day");
-    jobs
-      .filter((j) => j.archived && j.archivedAt)
-      .forEach((j) => {
-        const d = j.archivedAt?.toDate ? j.archivedAt.toDate() : new Date(j.archivedAt);
-        if (dayjs(d).isBefore(cutoff)) {
-          deleteDoc(doc(db, "jobs", j.id)).catch(console.error);
-        }
-      });
-  }, [mainTab, jobs]);
 
   const activeRows = useMemo(() => {
     const q = search.trim().toLowerCase();
