@@ -25,6 +25,24 @@ export function usePushNotifications() {
     isSupported().then(setSupported);
   }, []);
 
+  // Re-read permission when the user returns to the tab (e.g. after changing browser settings)
+  useEffect(() => {
+    const onFocus = () => setPermission(getPermissionState());
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
+  // Listen for live permission changes via the Permissions API (Chrome/Edge)
+  useEffect(() => {
+    if (!navigator.permissions) return;
+    let permStatus;
+    navigator.permissions.query({ name: "notifications" }).then((s) => {
+      permStatus = s;
+      s.onchange = () => setPermission(getPermissionState());
+    }).catch(() => {});
+    return () => { if (permStatus) permStatus.onchange = null; };
+  }, []);
+
   const getMsg = useCallback(async () => {
     if (messagingRef.current) return messagingRef.current;
     if (!(await isSupported())) return null;
