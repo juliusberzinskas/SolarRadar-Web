@@ -17,6 +17,7 @@
     "reset": "Reset",
     "cancel": "Cancel",
     "save": "Save",
+    "saving": "Saving...",
     "add": "Add",
     "close": "Close",
     "all": "All",
@@ -305,7 +306,9 @@
         "createTech": "New technician",
         "editTech": "Edit technician",
         "createAdmin": "New administrator",
-        "idLabel": "ID: "
+        "idLabel": "ID: ",
+        "promoteHint": "Select a technician from the list to promote them to administrator.",
+        "noTechnicians": "No technicians found to promote."
       },
       "form": {
         "name": "Full name",

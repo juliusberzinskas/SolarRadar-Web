@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   collection,
   getDocs,
@@ -32,6 +33,7 @@ import {
   Grid,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   Paper,
   Skeleton,
@@ -200,8 +202,8 @@ function DonutChart({ data, total, centerLabel }) {
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={46}
-              outerRadius={68}
+              innerRadius={54}
+              outerRadius={80}
               paddingAngle={3}
               dataKey="value"
               startAngle={90}
@@ -251,8 +253,9 @@ function DonutChart({ data, total, centerLabel }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
-  const theme  = useTheme();
-  const locale = i18n.language === "lt" ? "lt" : "en";
+  const theme    = useTheme();
+  const navigate = useNavigate();
+  const locale   = i18n.language === "lt" ? "lt" : "en";
 
   // ── Data ────────────────────────────────────────────────────────────────────
   const [jobs,           setJobs]           = useState([]);
@@ -377,16 +380,16 @@ export default function Dashboard() {
 
       {/* ── KPI cards ── */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <KpiCard label={t("pages.dashboard.kpi.open")}        count={openCount}       icon={<AssignmentLateIcon fontSize="inherit" />}     accentColor={C_AMBER}  loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <KpiCard label={t("pages.dashboard.kpi.inProgress")}  count={inProgressCount} icon={<SyncIcon fontSize="inherit" />}               accentColor={C_BLUE}   loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <KpiCard label={t("pages.dashboard.kpi.resolved")}    count={resolvedCount}   icon={<CheckCircleOutlineIcon fontSize="inherit" />}  accentColor={C_GREEN}  loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <KpiCard label={t("pages.dashboard.kpi.activeSites")} count={sitesCount}      icon={<SolarPowerIcon fontSize="inherit" />}          accentColor="#a855f7"  loading={loading} />
         </Grid>
       </Grid>
@@ -422,11 +425,11 @@ export default function Dashboard() {
           </ToggleButtonGroup>
         </Stack>
 
-        {/* ── All charts — single responsive row that wraps ── */}
-        <Grid container spacing={2}>
+        {/* ── Row 1 ── */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
 
           {/* Chart 1 — Jobs Resolved per Month */}
-          <Grid item xs={12} sm={6} lg={3}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <ChartPanel
               title={t("pages.dashboard.charts.resolvedPerMonth.title")}
               subtitle={`${resolvedCount} ${t("pages.dashboard.charts.resolved")}`}
@@ -472,12 +475,11 @@ export default function Dashboard() {
           </Grid>
 
           {/* Chart 2 — Job Status Donut */}
-          <Grid item xs={12} sm={6} lg={3}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ChartPanel
               title={t("pages.dashboard.charts.statusBreakdown.title")}
               subtitle={t("pages.dashboard.charts.statusBreakdown.subtitle")}
               loading={loadingJobs}
-              compact
             >
               <DonutChart
                 data={statusChartData}
@@ -487,8 +489,13 @@ export default function Dashboard() {
             </ChartPanel>
           </Grid>
 
+        </Grid>
+
+        {/* ── Row 2 ── */}
+        <Grid container spacing={2}>
+
           {/* Chart 3 — Top 3 Technicians (horizontal bar) */}
-          <Grid item xs={12} sm={6} lg={3}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <ChartPanel
               title={t("pages.dashboard.charts.topTechnicians.title")}
               subtitle={t("pages.dashboard.charts.topTechnicians.subtitle")}
@@ -547,12 +554,11 @@ export default function Dashboard() {
           </Grid>
 
           {/* Chart 4 — Report Outcomes Donut */}
-          <Grid item xs={12} sm={6} lg={3}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ChartPanel
               title={t("pages.dashboard.charts.reportOutcomes.title")}
               subtitle={t("pages.dashboard.charts.reportOutcomes.subtitle")}
               loading={loadingReports}
-              compact
             >
               <DonutChart
                 data={reportOutcomes}
@@ -586,33 +592,66 @@ export default function Dashboard() {
           </Box>
         ) : (
           <List disablePadding>
-            {recentJobs.map((job, idx) => (
-              <Box key={job.id}>
-                <ListItem
-                  sx={{ px: 2.5, py: 1.4 }}
-                  secondaryAction={
-                    <Stack direction="row" spacing={0.8} alignItems="center">
+            {recentJobs.map((job, idx) => {
+              const deadlineDays = job.deadline
+                ? dayjs(job.deadline).diff(dayjs().startOf("day"), "day")
+                : null;
+              const deadlineLabel = deadlineDays === null ? null
+                : deadlineDays < 0  ? t("pages.jobs.deadline.overdue")
+                : deadlineDays === 0 ? t("pages.jobs.deadline.today")
+                : t("pages.jobs.deadline.days", { count: deadlineDays });
+              const deadlineColor = deadlineDays === null ? undefined
+                : deadlineDays <= 0 ? "error"
+                : deadlineDays <= 6 ? "warning"
+                : "default";
+
+              return (
+                <Box key={job.id}>
+                  <ListItemButton
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                    sx={{ px: 2.5, py: 1.4 }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Typography fontWeight={600} fontSize="0.9rem" noWrap sx={{ maxWidth: 340 }}>
+                          {t(`jobType.${job.type}`, job.type || "—")}
+                        </Typography>
+                      }
+                      secondary={
+                        <Stack direction="row" alignItems="center" flexWrap="wrap" gap={0.6} sx={{ mt: 0.3 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            {job.siteName || "—"} · {formatAgo(job.createdAt, locale)}
+                          </Typography>
+                          {job.assignedName && (
+                            <Chip
+                              size="small"
+                              label={job.assignedName}
+                              variant="outlined"
+                              sx={{ fontSize: "0.68rem", height: 18, "& .MuiChip-label": { px: 0.8 } }}
+                            />
+                          )}
+                          {deadlineLabel && (
+                            <Chip
+                              size="small"
+                              label={deadlineLabel}
+                              color={deadlineColor}
+                              variant="outlined"
+                              sx={{ fontSize: "0.68rem", height: 18, "& .MuiChip-label": { px: 0.8 } }}
+                            />
+                          )}
+                        </Stack>
+                      }
+                      disableTypography={false}
+                    />
+                    <Stack direction="row" spacing={0.8} alignItems="center" sx={{ ml: 1, flexShrink: 0 }}>
                       <PriorityChip value={job.priority} />
                       <StatusChip   value={job.status}   />
                     </Stack>
-                  }
-                >
-                  <ListItemText
-                    primary={
-                      <Typography fontWeight={600} fontSize="0.9rem" noWrap sx={{ maxWidth: 340 }}>
-                        {job.title}
-                      </Typography>
-                    }
-                    secondary={
-                      <Typography variant="caption" color="text.secondary">
-                        {job.siteName || "—"} · {formatAgo(job.createdAt, locale)}
-                      </Typography>
-                    }
-                  />
-                </ListItem>
-                {idx < recentJobs.length - 1 && <Divider />}
-              </Box>
-            ))}
+                  </ListItemButton>
+                  {idx < recentJobs.length - 1 && <Divider />}
+                </Box>
+              );
+            })}
           </List>
         )}
       </Paper>

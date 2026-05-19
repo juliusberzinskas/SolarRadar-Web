@@ -17,6 +17,7 @@
     "reset": "Atstatyti",
     "cancel": "Atšaukti",
     "save": "Išsaugoti",
+    "saving": "Išsaugoma...",
     "add": "Pridėti",
     "close": "Uždaryti",
     "all": "Visi",
@@ -305,7 +306,9 @@
         "createTech": "Naujas technikas",
         "editTech": "Redaguoti techniką",
         "createAdmin": "Naujas administratorius",
-        "idLabel": "ID: "
+        "idLabel": "ID: ",
+        "promoteHint": "Pasirinkite techniką iš sąrašo, kad suteiktumėte jam administratoriaus rolę.",
+        "noTechnicians": "Nėra technikų, kuriuos būtų galima paaukštinti."
       },
       "form": {
         "name": "Vardas ir pavardė",
