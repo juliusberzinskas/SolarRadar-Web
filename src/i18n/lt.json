@@ -9,10 +9,12 @@
     "timesheets": "Darbo laikas",
     "reports": "Ataskaitos",
     "settings": "Nustatymai",
-    "logout": "Atsijungti"
+    "logout": "Atsijungti",
+    "import": "Importuoti duomenis"
   },
 
   "common": {
+    "back": "Atgal",
     "search": "Paieška",
     "reset": "Atstatyti",
     "cancel": "Atšaukti",
@@ -381,6 +383,48 @@
         "countSingular": "nuotrauka",
         "countPlural": "nuotraukos"
       }
+    },
+
+    "import": {
+      "title": "Importuoti duomenis",
+      "subtitle": "Įkelkite CSV arba Excel failus, kad masiškai importuotumėte objektus ir darbuotojus",
+      "steps": {
+        "chooseType": "Pasirinkite tipą",
+        "uploadPreview": "Įkelti ir peržiūrėti",
+        "confirm": "Patvirtinti"
+      },
+      "step1": {
+        "title": "Ką norite importuoti?",
+        "subtitle": "Pasirinkite duomenų tipą, kurį norite masiškai įkelti į SolarRadar."
+      },
+      "step2": {
+        "title": "Importuoti: {{type}}",
+        "subtitle": "Atsisiųskite šabloną, užpildykite ir įkelkite jį čia."
+      },
+      "type": {
+        "sites": "Objektai",
+        "sitesDesc": "Saulės elektrinių / projektų duomenys",
+        "members": "Darbuotojai",
+        "membersDesc": "Technikų paskyros"
+      },
+      "downloadTemplate": "Atsisiųsti šabloną (.xlsx)",
+      "dropzone": {
+        "label": "Nuvilkite failą čia arba spustelėkite",
+        "hint": "Palaikomi formatai: .csv, .xlsx, .xls"
+      },
+      "preview": "{{count}} eilučių paruošta importuoti",
+      "readyToImport": "Paruošta",
+      "validationErrors": "{{count}} eilutė(-ių) turi klaidų — ištaisykite faile ir įkelkite iš naujo",
+      "rowError": "Eilutė {{row}}: {{errors}}",
+      "moreErrors": "...ir dar {{count}}",
+      "confirmImport": "Importuoti {{count}} eilučių",
+      "importing": "Importuojama...",
+      "result": {
+        "title": "Importavimas baigtas",
+        "imported": "{{count}} įrašų sėkmingai importuota",
+        "skipped": "{{count}} praleista (el. paštas jau egzistuoja)"
+      },
+      "importAnother": "Importuoti kitą failą"
     },
 
     "settings": {

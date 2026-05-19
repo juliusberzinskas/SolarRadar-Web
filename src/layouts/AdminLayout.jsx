@@ -35,6 +35,7 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 const drawerWidth = 260;
 
@@ -213,6 +214,32 @@ function SidebarContent({ onNavigate }) {
         </>
       )}
 
+      {/* ── Import Data button ── */}
+      <Box sx={{ px: 2, pb: 1.5 }}>
+        <ListItemButton
+          component={NavLink}
+          to="/import"
+          onClick={onNavigate}
+          sx={{
+            borderRadius: 1.5,
+            border: "1px solid rgba(96,165,250,0.30)",
+            backgroundColor: "rgba(96,165,250,0.08)",
+            "&:hover": { backgroundColor: "rgba(96,165,250,0.16)" },
+            py: 0.9,
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 36, color: "#60a5fa" }}>
+            <UploadFileIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText
+            primary={t("menu.import")}
+            primaryTypographyProps={{
+              sx: { color: "#93c5fd", fontWeight: 600, fontSize: "0.85rem" },
+            }}
+          />
+        </ListItemButton>
+      </Box>
+
       <Divider sx={{ borderColor: SIDEBAR_DIVIDER }} />
 
       {/* ── Logout ── */}
@@ -263,6 +290,7 @@ export default function AdminLayout() {
     "/timesheets": t("menu.timesheets"),
     "/reports":    t("menu.reports"),
     "/settings":   t("menu.settings"),
+    "/import":     t("menu.import"),
   };
   const pageTitle = PAGE_TITLES[location.pathname] || t("app.title");
 

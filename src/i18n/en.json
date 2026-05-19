@@ -9,10 +9,12 @@
     "timesheets": "Timesheets",
     "reports": "Reports",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "import": "Import Data"
   },
 
   "common": {
+    "back": "Back",
     "search": "Search",
     "reset": "Reset",
     "cancel": "Cancel",
@@ -381,6 +383,48 @@
         "countSingular": "photo",
         "countPlural": "photos"
       }
+    },
+
+    "import": {
+      "title": "Import Data",
+      "subtitle": "Upload CSV or Excel files to bulk-import sites and members",
+      "steps": {
+        "chooseType": "Choose type",
+        "uploadPreview": "Upload & preview",
+        "confirm": "Confirm"
+      },
+      "step1": {
+        "title": "What would you like to import?",
+        "subtitle": "Select the data type you want to bulk-import into SolarRadar."
+      },
+      "step2": {
+        "title": "Import {{type}}",
+        "subtitle": "Download the template, fill it in, then upload it here."
+      },
+      "type": {
+        "sites": "Sites",
+        "sitesDesc": "Solar site / project data",
+        "members": "Members",
+        "membersDesc": "Technician accounts"
+      },
+      "downloadTemplate": "Download template (.xlsx)",
+      "dropzone": {
+        "label": "Drop file here or click to browse",
+        "hint": "Supports .csv, .xlsx, .xls"
+      },
+      "preview": "{{count}} rows ready to import",
+      "readyToImport": "Ready",
+      "validationErrors": "{{count}} row(s) have errors — fix them in the file and re-upload",
+      "rowError": "Row {{row}}: {{errors}}",
+      "moreErrors": "...and {{count}} more",
+      "confirmImport": "Import {{count}} rows",
+      "importing": "Importing...",
+      "result": {
+        "title": "Import complete",
+        "imported": "{{count}} records imported successfully",
+        "skipped": "{{count}} skipped (duplicate email)"
+      },
+      "importAnother": "Import another file"
     },
 
     "settings": {

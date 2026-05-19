@@ -13,6 +13,7 @@ import Timesheets from "./pages/Timesheets";
 import Reports from "./pages/Reports";
 import ReportDetail from "./pages/ReportDetail";
 import Settings from "./pages/Settings";
+import Import from "./pages/Import";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/reports/:reportId" element={<ReportDetail />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/import" element={<Import />} />
         </Route>
 
         {/* 404 catch-all */}
