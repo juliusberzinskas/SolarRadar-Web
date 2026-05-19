@@ -597,55 +597,61 @@ export default function Dashboard() {
                 ? dayjs(job.deadline).diff(dayjs().startOf("day"), "day")
                 : null;
               const deadlineLabel = deadlineDays === null ? null
-                : deadlineDays < 0  ? t("pages.jobs.deadline.overdue")
+                : deadlineDays < 0   ? t("pages.jobs.deadline.overdue")
                 : deadlineDays === 0 ? t("pages.jobs.deadline.today")
                 : t("pages.jobs.deadline.days", { count: deadlineDays });
-              const deadlineColor = deadlineDays === null ? undefined
+              const deadlineColor = deadlineDays === null ? "default"
                 : deadlineDays <= 0 ? "error"
                 : deadlineDays <= 6 ? "warning"
                 : "default";
+              const jobTypeLabel = job.type ? t(`jobType.${job.type}`) : "—";
 
               return (
                 <Box key={job.id}>
                   <ListItemButton
                     onClick={() => navigate(`/jobs/${job.id}`)}
-                    sx={{ px: 2.5, py: 1.4 }}
+                    sx={{ px: 2.5, py: 1.4, gap: 1 }}
                   >
+                    {/* Left: site + time */}
                     <ListItemText
                       primary={
-                        <Typography fontWeight={600} fontSize="0.9rem" noWrap sx={{ maxWidth: 340 }}>
-                          {t(`jobType.${job.type}`, job.type || "—")}
+                        <Typography fontWeight={600} fontSize="0.9rem" noWrap>
+                          {job.siteName || "—"}
                         </Typography>
                       }
                       secondary={
-                        <Stack direction="row" alignItems="center" flexWrap="wrap" gap={0.6} sx={{ mt: 0.3 }}>
-                          <Typography variant="caption" color="text.secondary">
-                            {job.siteName || "—"} · {formatAgo(job.createdAt, locale)}
-                          </Typography>
-                          {job.assignedName && (
-                            <Chip
-                              size="small"
-                              label={job.assignedName}
-                              variant="outlined"
-                              sx={{ fontSize: "0.68rem", height: 18, "& .MuiChip-label": { px: 0.8 } }}
-                            />
-                          )}
-                          {deadlineLabel && (
-                            <Chip
-                              size="small"
-                              label={deadlineLabel}
-                              color={deadlineColor}
-                              variant="outlined"
-                              sx={{ fontSize: "0.68rem", height: 18, "& .MuiChip-label": { px: 0.8 } }}
-                            />
-                          )}
-                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatAgo(job.createdAt, locale)}
+                        </Typography>
                       }
-                      disableTypography={false}
                     />
-                    <Stack direction="row" spacing={0.8} alignItems="center" sx={{ ml: 1, flexShrink: 0 }}>
-                      <PriorityChip value={job.priority} />
-                      <StatusChip   value={job.status}   />
+
+                    {/* Right: tech · deadline · type · status */}
+                    <Stack direction="row" alignItems="center" spacing={0.7} sx={{ flexShrink: 0 }}>
+                      {job.assignedName && (
+                        <Chip
+                          size="small"
+                          label={job.assignedName}
+                          variant="outlined"
+                          sx={{ fontSize: "0.72rem", height: 22 }}
+                        />
+                      )}
+                      {deadlineLabel && (
+                        <Chip
+                          size="small"
+                          label={deadlineLabel}
+                          color={deadlineColor}
+                          variant="outlined"
+                          sx={{ fontSize: "0.72rem", height: 22 }}
+                        />
+                      )}
+                      <Chip
+                        size="small"
+                        label={jobTypeLabel}
+                        variant="outlined"
+                        sx={{ fontSize: "0.72rem", height: 22 }}
+                      />
+                      <StatusChip value={job.status} />
                     </Stack>
                   </ListItemButton>
                   {idx < recentJobs.length - 1 && <Divider />}
