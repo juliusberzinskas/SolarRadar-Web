@@ -151,6 +151,13 @@
         "lng": "Ilguma"
       },
       "map": {
+        "setLocation": "Nustatyti objekto vietą",
+        "placing": "Spustelėkite žemėlapį",
+        "placingHint": "Spustelėkite bet kurią žemėlapio vietą, kad padėtumėte objekto žymeklį. Spustelėkite mygtuką dar kartą, kad atšauktumėte.",
+        "saveLocation": "Išsaugoti vietą",
+        "geocoding": "Ieškoma adreso žemėlapyje...",
+        "legendAddress": "Adreso vieta",
+        "legendSite": "Tiksli objekto vieta",
         "noCoords": "Koordinatės dar neįvestos. Įveskite platumą ir ilgumą Informacijos skirtuke, kad matytumėte žemėlapį.",
         "iframeTitle": "Objekto vieta"
       },

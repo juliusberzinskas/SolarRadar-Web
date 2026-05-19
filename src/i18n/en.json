@@ -151,6 +151,13 @@
         "lng": "Longitude"
       },
       "map": {
+        "setLocation": "Set site location",
+        "placing": "Click map to place marker",
+        "placingHint": "Click anywhere on the map to place the site location marker. Click the button again to cancel.",
+        "saveLocation": "Save location",
+        "geocoding": "Finding address on map...",
+        "legendAddress": "Address location",
+        "legendSite": "Exact site location",
         "noCoords": "Coordinates not entered yet. Enter latitude and longitude in the Information tab to see the map.",
         "iframeTitle": "Site location"
       },

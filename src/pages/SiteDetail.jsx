@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
@@ -39,6 +39,11 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
+
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const REGIONS = ["Alytus", "Druskininkai", "Kaunas", "Klaipėda", "Marijampolė", "Mažeikiai", "Panevėžys", "Plungė", "Šiauliai", "Tauragė", "Telšiai", "Utena", "Vilnius"];
 const MOUNTING_TYPES = ["Stogo", "Žemės"];
@@ -220,37 +225,230 @@ function InfoTab({ site, siteId }) {
           ))}
         </Stack>
       </Paper>
+
+      {/* ── Read-only location map ── */}
+      {site.location?.lat != null && (
+        <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+          <Box sx={{ px: 2, pt: 1.5, pb: 1 }}>
+            <Typography variant="body2" fontWeight={700} color="text.secondary">
+              {t("pages.siteDetail.map.legendSite")}
+            </Typography>
+          </Box>
+          <MapContainer
+            center={[site.location.lat, site.location.lng]}
+            zoom={17}
+            style={{ height: 500, width: "100%"}}
+            zoomControl={false}
+            dragging={false}
+            scrollWheelZoom={false}
+            doubleClickZoom={false}
+            touchZoom={false}
+            attributionControl={false}
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <Marker position={[site.location.lat, site.location.lng]} icon={siteIcon}>
+              <Popup>{site.name}</Popup>
+            </Marker>
+          </MapContainer>
+        </Paper>
+      )}
     </Stack>
   );
 }
 
-function MapTab({ site }) {
-  const { t } = useTranslation();
-  const address = site?.address;
+// ── Leaflet custom icons ──────────────────────────────────────────────────────
 
-  if (!address) {
-    return (
-      <Paper variant="outlined" sx={{ p: 4, borderRadius: 2, textAlign: "center" }}>
-        <Typography color="text.secondary">
-          {t("pages.siteDetail.map.noCoords")}
-        </Typography>
-      </Paper>
-    );
-  }
+function pinSvg(color) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="28" height="42">
+    <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z"
+      fill="${color}" stroke="white" stroke-width="1.5"/>
+    <circle cx="12" cy="12" r="5" fill="white" opacity="0.85"/>
+  </svg>`;
+}
+
+const addressIcon = L.divIcon({
+  className: "",
+  html: pinSvg("#3b82f6"),
+  iconSize: [28, 42],
+  iconAnchor: [14, 42],
+  popupAnchor: [0, -44],
+});
+
+const siteIcon = L.divIcon({
+  className: "",
+  html: pinSvg("#f97316"),
+  iconSize: [28, 42],
+  iconAnchor: [14, 42],
+  popupAnchor: [0, -44],
+});
+
+// Handles map clicks when placement mode is active
+function ClickHandler({ active, onPlace }) {
+  const map = useMapEvents({
+    click(e) {
+      if (active) onPlace(e.latlng);
+    },
+  });
+  useEffect(() => {
+    map.getContainer().style.cursor = active ? "crosshair" : "";
+  }, [active, map]);
+  return null;
+}
+
+// ── MapTab ────────────────────────────────────────────────────────────────────
+
+const LT_CENTER = [55.9, 23.9]; // Lithuania
+
+function MapTab({ site, siteId }) {
+  const { t } = useTranslation();
+
+  // Saved location from Firestore
+  const savedLoc = site?.location?.lat != null ? site.location : null;
+
+  // Address marker — geocoded from the address string
+  const [addrPos, setAddrPos]   = useState(null);
+  const [geocoding, setGeocoding] = useState(false);
+
+  // Pending site marker (not yet saved)
+  const [siteLoc, setSiteLoc]   = useState(savedLoc);
+  const [placing, setPlacing]   = useState(false);
+  const [saving, setSaving]     = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saved, setSaved]       = useState(false);
+
+  const isDirty = siteLoc && (
+    !savedLoc ||
+    siteLoc.lat !== savedLoc.lat ||
+    siteLoc.lng !== savedLoc.lng
+  );
+
+  // Geocode address via Nominatim (free, no API key)
+  useEffect(() => {
+    if (!site?.address) return;
+    setGeocoding(true);
+    fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(site.address)}&limit=1`,
+      { headers: { "Accept-Language": "en" } }
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (data[0]) setAddrPos({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+      })
+      .catch(() => {})
+      .finally(() => setGeocoding(false));
+  }, [site?.address]);
+
+  const handlePlace = useCallback((latlng) => {
+    setSiteLoc({ lat: latlng.lat, lng: latlng.lng });
+    setPlacing(false);
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError("");
+    try {
+      await updateDoc(doc(db, "sites", siteId), { location: siteLoc });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      setSaveError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const mapCenter = savedLoc
+    ? [savedLoc.lat, savedLoc.lng]
+    : addrPos
+    ? [addrPos.lat, addrPos.lng]
+    : LT_CENTER;
 
   return (
-    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-      <iframe
-        title={t("pages.siteDetail.map.iframeTitle")}
-        src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=15&output=embed`}
-        width="100%"
-        height="480"
-        style={{ border: 0, display: "block" }}
-        allowFullScreen
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-      />
-    </Paper>
+    <Stack spacing={2}>
+      {/* Controls */}
+      <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
+        <Button
+          variant={placing ? "contained" : "outlined"}
+          color={placing ? "warning" : "primary"}
+          startIcon={<MyLocationIcon />}
+          onClick={() => setPlacing((p) => !p)}
+          size="small"
+        >
+          {placing ? t("pages.siteDetail.map.placing") : t("pages.siteDetail.map.setLocation")}
+        </Button>
+
+        {siteLoc && (
+          <Typography variant="caption" color="text.secondary">
+            {siteLoc.lat.toFixed(6)}, {siteLoc.lng.toFixed(6)}
+          </Typography>
+        )}
+
+        {isDirty && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={saving ? <CircularProgress size={14} color="inherit" /> : <SaveIcon />}
+            onClick={handleSave}
+            disabled={saving}
+            sx={{ ml: "auto" }}
+          >
+            {saving ? t("common.saving") : t("pages.siteDetail.map.saveLocation")}
+          </Button>
+        )}
+      </Stack>
+
+      {placing && (
+        <Alert severity="info" sx={{ py: 0.5 }}>
+          {t("pages.siteDetail.map.placingHint")}
+        </Alert>
+      )}
+      {geocoding && (
+        <Alert severity="info" sx={{ py: 0.5 }}>
+          {t("pages.siteDetail.map.geocoding")}
+        </Alert>
+      )}
+      {saveError && <Alert severity="error">{saveError}</Alert>}
+      {saved    && <Alert severity="success">{t("common.savedOk")}</Alert>}
+
+      {/* Legend */}
+      <Stack direction="row" gap={2.5}>
+        <Stack direction="row" alignItems="center" gap={0.75}>
+          <Box sx={{ width: 14, height: 14, borderRadius: "50%", bgcolor: "#3b82f6", border: "2px solid white", boxShadow: 1 }} />
+          <Typography variant="caption" color="text.secondary">{t("pages.siteDetail.map.legendAddress")}</Typography>
+        </Stack>
+        <Stack direction="row" alignItems="center" gap={0.75}>
+          <Box sx={{ width: 14, height: 14, borderRadius: "50%", bgcolor: "#f97316", border: "2px solid white", boxShadow: 1 }} />
+          <Typography variant="caption" color="text.secondary">{t("pages.siteDetail.map.legendSite")}</Typography>
+        </Stack>
+      </Stack>
+
+      {/* Map */}
+      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+        <MapContainer
+          center={mapCenter}
+          zoom={savedLoc || addrPos ? 15 : 7}
+          style={{ height: 480, width: "100%" }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <ClickHandler active={placing} onPlace={handlePlace} />
+
+          {addrPos && (
+            <Marker position={[addrPos.lat, addrPos.lng]} icon={addressIcon}>
+              <Popup>{t("pages.siteDetail.map.legendAddress")}<br />{site.address}</Popup>
+            </Marker>
+          )}
+
+          {siteLoc && (
+            <Marker position={[siteLoc.lat, siteLoc.lng]} icon={siteIcon}>
+              <Popup>{t("pages.siteDetail.map.legendSite")}<br />{siteLoc.lat.toFixed(6)}, {siteLoc.lng.toFixed(6)}</Popup>
+            </Marker>
+          )}
+        </MapContainer>
+      </Paper>
+    </Stack>
   );
 }
 
@@ -584,7 +782,7 @@ export default function SiteDetail() {
             <InfoTab site={site} siteId={siteId} />
           </TabPanel>
           <TabPanel value={tab} index={1}>
-            <MapTab site={site} />
+            <MapTab site={site} siteId={siteId} />
           </TabPanel>
           <TabPanel value={tab} index={2}>
             <MountingTab site={site} siteId={siteId} />
