@@ -12,11 +12,11 @@ import {
   setDoc,
   getDocs,
   serverTimestamp,
-  addDoc,
 } from "firebase/firestore";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "../firebase";
+import { httpsCallable } from "firebase/functions";
+import { auth, db, storage, functions } from "../firebase";
 import {
   Alert,
   Avatar,
@@ -152,13 +152,7 @@ const emptyAdminForm = () => ({
   active: true,
 });
 
-// Firebase Auth REST API error codes
-const AUTH_ERRORS = {
-  EMAIL_EXISTS: "Šis el. paštas jau naudojamas.",
-  INVALID_EMAIL: "Neteisingas el. pašto formatas.",
-  OPERATION_NOT_ALLOWED: "El. pašto registracija išjungta Firebase konsolėje.",
-  TOO_MANY_ATTEMPTS_TRY_LATER: "Per daug bandymų. Pabandykite vėliau.",
-};
+const createAuthUser = httpsCallable(functions, "createAuthUser");
 
 // Returns next sequential member ID like SR01, SR02, SR03 ...
 async function getNextMemberId() {
@@ -317,26 +311,12 @@ function TechniciansTab() {
     setSaveError("");
     setSaving(true);
     try {
-      const tempPassword = "Tmp@" + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 4).toUpperCase();
-
-      const res = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${import.meta.env.VITE_FIREBASE_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: form.email, password: tempPassword, returnSecureToken: false }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        const code = data.error?.message ?? "UNKNOWN";
-        throw new Error(AUTH_ERRORS[code] ?? `Firebase klaida: ${code}`);
-      }
+      const { data } = await createAuthUser({ email: form.email });
 
       await sendPasswordResetEmail(auth, form.email);
 
       const memberId = await getNextMemberId();
-      await setDoc(doc(db, "users", data.localId), {
+      await setDoc(doc(db, "users", data.uid), {
         role:        "technician",
         memberId,
         displayName: form.displayName,
@@ -721,19 +701,31 @@ function AdminsTab() {
     [t]
   );
 
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+
   const handleCreate = async () => {
     setSaveError("");
+    setSaving(true);
     try {
-      await addDoc(collection(db, "users"), {
+      const { data } = await createAuthUser({ email: form.email });
+
+      await sendPasswordResetEmail(auth, form.email);
+
+      await setDoc(doc(db, "users", data.uid), {
         role:        "admin",
         displayName: form.displayName,
         email:       form.email,
         active:      form.active,
         createdAt:   serverTimestamp(),
       });
+
       setOpenCreate(false);
+      setSuccessMsg(t("pages.members.successCreate", { email: form.email }));
     } catch (e) {
       setSaveError(e.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -768,10 +760,6 @@ function AdminsTab() {
         <DialogTitle>{t("pages.members.dialog.createAdmin")}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <Alert severity="info">
-              Naujas vartotojas gaus rolę „Administratorius". Prisijungimo paskyra turi būti
-              sukurta atskirai Firebase Authentication konsolėje.
-            </Alert>
             <TextField
               label={t("pages.members.form.name")}
               value={form.displayName}
@@ -797,10 +785,23 @@ function AdminsTab() {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setOpenCreate(false)}>{t("common.cancel")}</Button>
-          <Button variant="contained" onClick={handleCreate}>{t("common.save")}</Button>
+          <Button onClick={() => setOpenCreate(false)} disabled={saving}>{t("common.cancel")}</Button>
+          <Button variant="contained" onClick={handleCreate} disabled={saving}>
+            {saving ? t("pages.members.creating") : t("common.save")}
+          </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={!!successMsg}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMsg("")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="success" onClose={() => setSuccessMsg("")} sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

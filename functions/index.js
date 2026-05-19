@@ -1,4 +1,4 @@
-const { onRequest }          = require("firebase-functions/v2/https");
+const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { initializeApp }      = require("firebase-admin/app");
 const { getAuth }            = require("firebase-admin/auth");
@@ -6,6 +6,31 @@ const { getMessaging }       = require("firebase-admin/messaging");
 const { getFirestore }       = require("firebase-admin/firestore");
 
 initializeApp();
+
+// ── Callable: create Firebase Auth user (avoids signing out the current admin) ─
+exports.createAuthUser = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Must be signed in.");
+
+    const { email } = request.data;
+    if (!email) throw new HttpsError("invalid-argument", "email is required.");
+
+    const tempPassword =
+      "Tmp@" +
+      Math.random().toString(36).slice(2, 10) +
+      Math.random().toString(36).slice(2, 4).toUpperCase();
+
+    try {
+      const user = await getAuth().createUser({ email, password: tempPassword });
+      return { uid: user.uid };
+    } catch (err) {
+      if (err.code === "auth/email-already-exists")
+        throw new HttpsError("already-exists", "This email is already in use.");
+      throw new HttpsError("internal", err.message);
+    }
+  }
+);
 
 // ── HTTP: delete Firebase Auth user ──────────────────────────────────────────
 exports.deleteAuthUser = onRequest(
