@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          in ["admin", "superadmin"];
+    }
+
+    // ── users ────────────────────────────────────────────────────────────────
+    // Admins: full access.
+    // Technicians: read own profile only (mobile app needs this to load their data).
+    match /users/{userId} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow write: if isAdmin();
+    }
+
+    // ── sites ─────────────────────────────────────────────────────────────────
+    // Admins: full access.
+    // Technicians: read only (mobile app shows site details for assigned jobs).
+    match /sites/{siteId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── jobs ──────────────────────────────────────────────────────────────────
+    // Admins: full access.
+    // Technicians: read only (mobile app shows assigned jobs).
+    match /jobs/{jobId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── reports ───────────────────────────────────────────────────────────────
+    // Admins: full access.
+    // Technicians: create new reports + read/update their own reports only.
+    match /reports/{reportId} {
+      allow read, write: if isAdmin();
+      allow create: if isSignedIn();
+      allow read, update: if isSignedIn() && resource.data.technicianId == request.auth.uid;
+    }
+
+    // Deny everything not explicitly covered above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
