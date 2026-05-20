@@ -18,6 +18,7 @@ export function usePushNotifications() {
   const [permission, setPermission] = useState(getPermissionState);
   const [enabled, setEnabled] = useState(() => localStorage.getItem(LS_ENABLED) === "true");
   const [loading, setLoading] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const messagingRef = useRef(null);
 
   // Check FCM support once on mount
@@ -27,7 +28,11 @@ export function usePushNotifications() {
 
   // Re-read permission when the user returns to the tab (e.g. after changing browser settings)
   useEffect(() => {
-    const onFocus = () => setPermission(getPermissionState());
+    const onFocus = () => {
+      const p = getPermissionState();
+      setPermission(p);
+      if (p !== "default") setDismissed(false);
+    };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, []);
@@ -62,9 +67,14 @@ export function usePushNotifications() {
 
   const enable = useCallback(async () => {
     setLoading(true);
+    setDismissed(false);
     try {
       const perm = await Notification.requestPermission();
       setPermission(perm);
+      if (perm === "default") {
+        setDismissed(true);
+        return false;
+      }
       if (perm !== "granted") return false;
 
       const token = await getCurrentToken();
@@ -121,5 +131,5 @@ export function usePushNotifications() {
     return () => unsub?.();
   }, [enabled, user, getMsg]);
 
-  return { supported, permission, enabled, loading, enable, disable, toggle };
+  return { supported, permission, enabled, loading, dismissed, enable, disable, toggle };
 }

@@ -30,7 +30,7 @@ export default function Settings() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { darkMode, toggleDarkMode } = useAppTheme();
-  const { supported, permission, enabled, loading, toggle } = usePushNotifications();
+  const { supported, permission, enabled, loading, dismissed, toggle } = usePushNotifications();
   const [lang, setLang] = useState(i18n.language || "en");
 
   const handleLogout = async () => {
@@ -58,6 +58,7 @@ export default function Settings() {
 
   const notifDenied = permission === "denied";
   const notifUnsupported = !supported;
+  const notifDismissed = dismissed && permission === "default";
 
   return (
     <Box>
@@ -109,6 +110,10 @@ export default function Settings() {
             ) : notifDenied ? (
               <Alert severity="error" sx={{ borderRadius: 2 }}>
                 {t("pages.settings.notifications.denied")}
+              </Alert>
+            ) : notifDismissed ? (
+              <Alert severity="info" sx={{ borderRadius: 2 }}>
+                {t("pages.settings.notifications.pending")}
               </Alert>
             ) : (
               <Stack direction="row" alignItems="center" justifyContent="space-between">

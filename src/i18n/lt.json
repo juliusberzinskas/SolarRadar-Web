@@ -449,7 +449,8 @@
         "on": "Gausite pranešimus, kai technikas pateikia ar redaguoja ataskaitą",
         "off": "Įjunkite, kad gautumėte perspėjimus apie pateiktas ar redaguotas ataskaitas",
         "unsupported": "Šis naršyklė nepalaiko pranešimų",
-        "denied": "Pranešimai užblokuoti. Leiskite juos naršyklės nustatymuose ir perkraukite puslapį."
+        "denied": "Pranešimai užblokuoti. Leiskite juos naršyklės nustatymuose ir perkraukite puslapį.",
+        "pending": "Raskite leidimo užklausą naršyklės adreso juostoje ir paspauskite Leisti."
       },
       "lang": {
         "title": "Kalba / Language",
