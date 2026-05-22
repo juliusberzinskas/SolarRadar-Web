@@ -1,4 +1,4 @@
-# Logs
+# logai
 logs
 *.log
 npm-debug.log*
@@ -28,9 +28,11 @@ dist-ssr
 .env.*
 !.env.example
 
-# Firebase Admin SDK service account keys — NEVER commit these
+# SDK raktai !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 *-firebase-adminsdk-*.json
 serviceAccountKey.json
 
-# Internal documentation (contains Firebase project identifiers and architecture details)
 context/
+
+# Firebase CLI cache
+.firebase/
