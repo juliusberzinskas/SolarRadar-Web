@@ -170,6 +170,7 @@ async function getNextMemberId() {
 
 function TechniciansTab() {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [members, setMembers] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -284,7 +285,7 @@ function TechniciansTab() {
         width: 60,
         sortable: false,
         filterable: false,
-        renderCell: (p) => (
+        renderCell: (p) => isDemo ? null : (
           <IconButton
             size="small"
             onClick={() => {
@@ -305,7 +306,7 @@ function TechniciansTab() {
         ),
       },
     ],
-    [t]
+    [t, isDemo]
   );
 
   const handleCreate = async () => {
@@ -410,15 +411,17 @@ function TechniciansTab() {
   return (
     <>
       <Box sx={{ mt: 2 }}>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => { setForm(emptyTechForm()); setSaveError(""); setOpenCreate(true); }}
-          >
-            {t("pages.members.addTech")}
-          </Button>
-        </Box>
+        {!isDemo && (
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => { setForm(emptyTechForm()); setSaveError(""); setOpenCreate(true); }}
+            >
+              {t("pages.members.addTech")}
+            </Button>
+          </Box>
+        )}
 
         <FilterBar search={search} onSearchChange={setSearch} onReset={() => { setSearch(""); setActiveFilter("all"); setMinYears("all"); }}>
           <FormControl size="small" sx={{ minWidth: 160 }}>
@@ -663,6 +666,7 @@ function TechniciansTab() {
 
 function AdminsTab() {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [admins, setAdmins] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -733,15 +737,17 @@ function AdminsTab() {
   return (
     <>
       <Box sx={{ mt: 2 }}>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => { setForm(emptyAdminForm()); setSaveError(""); setOpenCreate(true); }}
-          >
-            {t("pages.members.addAdmin")}
-          </Button>
-        </Box>
+        {!isDemo && (
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => { setForm(emptyAdminForm()); setSaveError(""); setOpenCreate(true); }}
+            >
+              {t("pages.members.addAdmin")}
+            </Button>
+          </Box>
+        )}
 
         <Paper sx={{ borderRadius: 2 }} variant="outlined">
           <Box sx={{ height: 520, width: "100%" }}>

@@ -44,6 +44,7 @@ import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useAuth } from "../contexts/AuthContext";
 
 const REGIONS = ["Alytus", "Druskininkai", "Kaunas", "Klaipėda", "Marijampolė", "Mažeikiai", "Panevėžys", "Plungė", "Šiauliai", "Tauragė", "Telšiai", "Utena", "Vilnius"];
 const MOUNTING_TYPES = ["Stogo", "Žemės"];
@@ -62,6 +63,7 @@ function TabPanel({ value, index, children }) {
 
 function InfoTab({ site, siteId }) {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -162,16 +164,18 @@ function InfoTab({ site, siteId }) {
           {saveError && <Alert severity="error">{saveError}</Alert>}
           {saved && <Alert severity="success">{t("common.savedOk")}</Alert>}
 
-          <Box>
-            <Button
-              variant="contained"
-              startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? t("common.saving") : t("common.saveChanges")}
-            </Button>
-          </Box>
+          {!isDemo && (
+            <Box>
+              <Button
+                variant="contained"
+                startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? t("common.saving") : t("common.saveChanges")}
+              </Button>
+            </Box>
+          )}
         </Stack>
       </Paper>
 
@@ -301,6 +305,7 @@ const LT_CENTER = [55.9, 23.9]; // Lithuania
 
 function MapTab({ site, siteId }) {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
 
   // Saved location from Firestore
   const savedLoc = site?.location?.lat != null ? site.location : null;
@@ -367,33 +372,37 @@ function MapTab({ site, siteId }) {
     <Stack spacing={2}>
       {/* Controls */}
       <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
-        <Button
-          variant={placing ? "contained" : "outlined"}
-          color={placing ? "warning" : "primary"}
-          startIcon={<MyLocationIcon />}
-          onClick={() => setPlacing((p) => !p)}
-          size="small"
-        >
-          {placing ? t("pages.siteDetail.map.placing") : t("pages.siteDetail.map.setLocation")}
-        </Button>
-
         {siteLoc && (
           <Typography variant="caption" color="text.secondary">
             {siteLoc.lat.toFixed(6)}, {siteLoc.lng.toFixed(6)}
           </Typography>
         )}
 
-        {isDirty && (
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={saving ? <CircularProgress size={14} color="inherit" /> : <SaveIcon />}
-            onClick={handleSave}
-            disabled={saving}
-            sx={{ ml: "auto" }}
-          >
-            {saving ? t("common.saving") : t("pages.siteDetail.map.saveLocation")}
-          </Button>
+        {!isDemo && (
+          <>
+            <Button
+              variant={placing ? "contained" : "outlined"}
+              color={placing ? "warning" : "primary"}
+              startIcon={<MyLocationIcon />}
+              onClick={() => setPlacing((p) => !p)}
+              size="small"
+            >
+              {placing ? t("pages.siteDetail.map.placing") : t("pages.siteDetail.map.setLocation")}
+            </Button>
+
+            {isDirty && (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={saving ? <CircularProgress size={14} color="inherit" /> : <SaveIcon />}
+                onClick={handleSave}
+                disabled={saving}
+                sx={{ ml: "auto" }}
+              >
+                {saving ? t("common.saving") : t("pages.siteDetail.map.saveLocation")}
+              </Button>
+            )}
+          </>
         )}
       </Stack>
 
@@ -454,6 +463,7 @@ function MapTab({ site, siteId }) {
 
 function MountingTab({ site, siteId }) {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -530,16 +540,18 @@ function MountingTab({ site, siteId }) {
         {saveError && <Alert severity="error">{saveError}</Alert>}
         {saved && <Alert severity="success">{t("common.savedOk")}</Alert>}
 
-        <Box>
-          <Button
-            variant="contained"
-            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? t("common.saving") : t("common.saveChanges")}
-          </Button>
-        </Box>
+        {!isDemo && (
+          <Box>
+            <Button
+              variant="contained"
+              startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? t("common.saving") : t("common.saveChanges")}
+            </Button>
+          </Box>
+        )}
       </Stack>
     </Paper>
   );
@@ -547,6 +559,7 @@ function MountingTab({ site, siteId }) {
 
 function PhotosTab({ siteId }) {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [photos, setPhotos] = useState([]);
   const [loadingPhotos, setLoadingPhotos] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -637,22 +650,26 @@ function PhotosTab({ siteId }) {
         <Typography variant="body2" color="text.secondary">
           {countLabel}
         </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<CloudUploadIcon />}
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {t("pages.siteDetail.photos.upload")}
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          style={{ display: "none" }}
-          onChange={handleFileChange}
-        />
+        {!isDemo && (
+          <>
+            <Button
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {t("pages.siteDetail.photos.upload")}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+          </>
+        )}
       </Stack>
 
       {uploading && (
@@ -689,7 +706,7 @@ function PhotosTab({ siteId }) {
                 style={{ height: 160, objectFit: "cover", width: "100%" }}
               />
               <ImageListItemBar
-                actionIcon={
+                actionIcon={!isDemo ? (
                   <Tooltip title={t("pages.siteDetail.photos.delete")}>
                     <IconButton
                       size="small"
@@ -699,7 +716,7 @@ function PhotosTab({ siteId }) {
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                }
+                ) : null}
                 actionPosition="right"
                 title={photo.name}
                 sx={{ "& .MuiImageListItemBar-title": { fontSize: "0.7rem" } }}

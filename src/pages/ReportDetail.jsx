@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../contexts/AuthContext";
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import {
@@ -69,6 +70,7 @@ function TabPanel({ value, index, children }) {
 
 function InfoTab({ report, reportId }) {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [adminNotes, setAdminNotes] = useState(report.adminNotes ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -161,16 +163,18 @@ function InfoTab({ report, reportId }) {
         />
         {saveError && <Alert severity="error" sx={{ mt: 1.5 }}>{saveError}</Alert>}
         {saved && <Alert severity="success" sx={{ mt: 1.5 }}>{t("common.savedOk")}</Alert>}
-        <Box sx={{ mt: 2 }}>
-          <Button
-            variant="contained"
-            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? t("common.saving") : t("pages.reportDetail.adminNotes.save")}
-          </Button>
-        </Box>
+        {!isDemo && (
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant="contained"
+              startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? t("common.saving") : t("pages.reportDetail.adminNotes.save")}
+            </Button>
+          </Box>
+        )}
       </Paper>
     </Stack>
   );

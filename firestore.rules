@@ -12,6 +12,11 @@ service cloud.firestore {
           in ["admin", "superadmin"];
     }
 
+    function isDemo() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "demo";
+    }
+
     // ── users ────────────────────────────────────────────────────────────────
     // Admins: full access.
     // Technicians: read own profile only (mobile app needs this to load their data).
@@ -39,10 +44,11 @@ service cloud.firestore {
     // ── reports ───────────────────────────────────────────────────────────────
     // Admins: full access.
     // Technicians: create new reports + read/update their own reports only.
+    // Demo users: read only (no writes).
     match /reports/{reportId} {
       allow read, write: if isAdmin();
-      allow create: if isSignedIn();
-      allow read, update: if isSignedIn() && resource.data.technicianId == request.auth.uid;
+      allow create: if isSignedIn() && !isDemo();
+      allow read, update: if isSignedIn() && !isDemo() && resource.data.technicianId == request.auth.uid;
     }
 
     // Deny everything not explicitly covered above.

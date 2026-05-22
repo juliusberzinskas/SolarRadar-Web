@@ -60,6 +60,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import ArchiveIcon from "@mui/icons-material/Archive";
+import { useAuth } from "../contexts/AuthContext";
 
 dayjs.extend(relativeTime);
 
@@ -118,6 +119,7 @@ function TabPanel({ value, index, children }) {
 
 function InfoTab({ job, jobId }) {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [technicians, setTechnicians] = useState([]);
   const [form, setForm] = useState({
     status:            job.status,
@@ -275,16 +277,18 @@ function InfoTab({ job, jobId }) {
             {saveError && <Alert severity="error">{saveError}</Alert>}
             {saved && <Alert severity="success">{t("common.savedOk")}</Alert>}
 
-            <Box>
-              <Button
-                variant="contained"
-                startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? t("common.saving") : t("common.saveChanges")}
-              </Button>
-            </Box>
+            {!isDemo && (
+              <Box>
+                <Button
+                  variant="contained"
+                  startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? t("common.saving") : t("common.saveChanges")}
+                </Button>
+              </Box>
+            )}
           </Stack>
         </Paper>
       )}
@@ -294,6 +298,7 @@ function InfoTab({ job, jobId }) {
 
 function AttachmentsTab({ jobId }) {
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [files, setFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -381,22 +386,26 @@ function AttachmentsTab({ jobId }) {
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
         <Typography variant="body2" color="text.secondary">{countLabel}</Typography>
-        <Button
-          variant="outlined"
-          startIcon={<CloudUploadIcon />}
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {t("pages.jobDetail.attachments.upload")}
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,.pdf,.doc,.docx,.xlsx,.csv"
-          multiple
-          style={{ display: "none" }}
-          onChange={handleFileChange}
-        />
+        {!isDemo && (
+          <>
+            <Button
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {t("pages.jobDetail.attachments.upload")}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,.pdf,.doc,.docx,.xlsx,.csv"
+              multiple
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+          </>
+        )}
       </Stack>
 
       {uploading && (
@@ -445,11 +454,13 @@ function AttachmentsTab({ jobId }) {
                   <DownloadIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={t("pages.jobDetail.attachments.delete")}>
-                <IconButton size="small" onClick={() => handleDelete(file)} color="error">
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              {!isDemo && (
+                <Tooltip title={t("pages.jobDetail.attachments.delete")}>
+                  <IconButton size="small" onClick={() => handleDelete(file)} color="error">
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
             </Paper>
           ))}
         </Stack>
@@ -462,6 +473,7 @@ export default function JobDetail() {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState(0);
@@ -562,15 +574,17 @@ export default function JobDetail() {
 
         <StatusChip value={job.status} />
 
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<DeleteForeverIcon />}
-          size="small"
-          onClick={() => setDeleteOpen(true)}
-        >
-          {t("common.delete")}
-        </Button>
+        {!isDemo && (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteForeverIcon />}
+            size="small"
+            onClick={() => setDeleteOpen(true)}
+          >
+            {t("common.delete")}
+          </Button>
+        )}
 
         {job.archived ? (
           <Tooltip title={archiveExpiryLabel}>
@@ -581,7 +595,7 @@ export default function JobDetail() {
               size="small"
             />
           </Tooltip>
-        ) : job.status === "resolved" ? (
+        ) : job.status === "resolved" && !isDemo ? (
           <Button
             variant="outlined"
             color="success"

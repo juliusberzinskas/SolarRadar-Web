@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../contexts/AuthContext";
 import {
   collection,
   onSnapshot,
@@ -163,6 +164,7 @@ const emptyCreateForm = () => ({
 export default function Jobs() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
 
   const [jobs, setJobs] = useState([]);
   const [sites, setSites] = useState([]);
@@ -312,7 +314,7 @@ export default function Jobs() {
       <PageHeader
         title={t("pages.jobs.title")}
         subtitle={t("pages.jobs.subtitle")}
-        primaryAction={{
+        primaryAction={isDemo ? undefined : {
           label: t("pages.jobs.create"),
           icon: <AddIcon />,
           onClick: () => { setCreateForm(emptyCreateForm()); setCreateError(""); setOpenCreate(true); },

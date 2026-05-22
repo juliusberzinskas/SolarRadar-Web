@@ -30,6 +30,7 @@ import AddIcon from "@mui/icons-material/Add";
 
 import PageHeader from "../components/PageHeader";
 import FilterBar from "../components/FilterBar";
+import { useAuth } from "../contexts/AuthContext";
 
 async function getNextSiteId() {
   const snap = await getDocs(collection(db, "sites"));
@@ -61,6 +62,7 @@ function StatusChip({ value }) {
 export default function Sites() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isDemo } = useAuth();
 
   const [sites, setSites] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -220,7 +222,7 @@ export default function Sites() {
       <PageHeader
         title={t("pages.sites.title")}
         subtitle={t("pages.sites.subtitle")}
-        primaryAction={{
+        primaryAction={isDemo ? undefined : {
           label: t("pages.sites.add"),
           icon: <AddIcon />,
           onClick: openCreateDialog,
