@@ -545,7 +545,7 @@ export default function JobDetail() {
     );
   }
 
-  // Compute archive expiry info
+  // prijungia prie info pasibaigimo datos
   let archiveExpiryLabel = null;
   if (job.archived && job.archivedAt) {
     const d = job.archivedAt?.toDate ? job.archivedAt.toDate() : new Date(job.archivedAt);
@@ -628,7 +628,7 @@ export default function JobDetail() {
         </Box>
       </Paper>
 
-      {/* Delete confirmation dialog */}
+      {/* visam istrina pativirtinimo dialog */}
       <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ color: "error.main" }}>{t("pages.jobDetail.delete.confirmTitle")}</DialogTitle>
         <DialogContent>
@@ -650,7 +650,7 @@ export default function JobDetail() {
         </DialogActions>
       </Dialog>
 
-      {/* Archive confirmation dialog */}
+      {/* patvirtinimo info dialog */}
       <Dialog open={archiveOpen} onClose={() => setArchiveOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{t("pages.jobDetail.archive.confirmTitle")}</DialogTitle>
         <DialogContent>
@@ -659,7 +659,7 @@ export default function JobDetail() {
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setArchiveOpen(false)}>{t("common.cancel")}</Button>
           <Button
-            variant="contained"
+            variant="contained"s
             color="success"
             startIcon={archiving ? <CircularProgress size={16} color="inherit" /> : <ArchiveIcon />}
             onClick={handleArchive}

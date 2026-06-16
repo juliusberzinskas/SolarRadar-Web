@@ -129,7 +129,7 @@ function InfoTab({ site, siteId }) {
 
   return (
     <Stack spacing={3}>
-      {/* ── Edit form ── */}
+      {/* ── pagr redag forma ── */}
       <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
         <Stack spacing={2.5}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -179,14 +179,14 @@ function InfoTab({ site, siteId }) {
         </Stack>
       </Paper>
 
-      {/* ── Read-only overview ── */}
+      {/* ── Read-only perziura ── */}
       <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
         <Typography fontWeight={700} sx={{ mb: 2 }}>
           {site.name}
         </Typography>
 
         <Stack spacing={0}>
-          {/* Site info rows */}
+          {/* objekto info */}
           {infoRows.map(({ label, value }) => (
             <Stack
               key={label}
@@ -202,7 +202,7 @@ function InfoTab({ site, siteId }) {
             </Stack>
           ))}
 
-          {/* Divider with mounting label */}
+          {/* montavimo label */}
           <Stack
             direction="row"
             sx={{ py: 1.5, mt: 1, borderBottom: "1px solid", borderColor: "divider" }}
@@ -212,7 +212,7 @@ function InfoTab({ site, siteId }) {
             </Typography>
           </Stack>
 
-          {/* Mounting rows */}
+          {/* montavimo label row */}
           {mountingRows.map(({ label, value }) => (
             <Stack
               key={label}
@@ -230,7 +230,7 @@ function InfoTab({ site, siteId }) {
         </Stack>
       </Paper>
 
-      {/* ── Read-only location map ── */}
+      {/* ── Read-only mapo location ── */}
       {site.location?.lat != null && (
         <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
           <Box sx={{ px: 2, pt: 1.5, pb: 1 }}>
@@ -260,7 +260,7 @@ function InfoTab({ site, siteId }) {
   );
 }
 
-// ── Leaflet custom icons ──────────────────────────────────────────────────────
+// leafled openstreetmap --------------------------------------------------
 
 function pinSvg(color) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="28" height="42">
@@ -286,7 +286,7 @@ const siteIcon = L.divIcon({
   popupAnchor: [0, -44],
 });
 
-// Handles map clicks when placement mode is active
+// jei paspadimo modas aktyvus sujungia map
 function ClickHandler({ active, onPlace }) {
   const map = useMapEvents({
     click(e) {
@@ -299,22 +299,22 @@ function ClickHandler({ active, onPlace }) {
   return null;
 }
 
-// ── MapTab ────────────────────────────────────────────────────────────────────
+// mapas -----------------------------------------------------------------
 
-const LT_CENTER = [55.9, 23.9]; // Lithuania
+const LT_CENTER = [55.9, 23.9]; // pirmutine vieta
 
 function MapTab({ site, siteId }) {
   const { t } = useTranslation();
   const { isDemo } = useAuth();
 
-  // Saved location from Firestore
+  // issaugo vieta from firestore
   const savedLoc = site?.location?.lat != null ? site.location : null;
 
-  // Address marker — geocoded from the address string
+  // adreso markeris sugeokodints su adress stringu
   const [addrPos, setAddrPos]   = useState(null);
   const [geocoding, setGeocoding] = useState(false);
 
-  // Pending site marker (not yet saved)
+  // laukiamas side markeris, neuzdetas
   const [siteLoc, setSiteLoc]   = useState(savedLoc);
   const [placing, setPlacing]   = useState(false);
   const [saving, setSaving]     = useState(false);
@@ -327,7 +327,7 @@ function MapTab({ site, siteId }) {
     siteLoc.lng !== savedLoc.lng
   );
 
-  // Geocode address via Nominatim (free, no API key)
+  // Nominatim geokodinimas per adresa
   useEffect(() => {
     if (!site?.address) return;
     setGeocoding(true);

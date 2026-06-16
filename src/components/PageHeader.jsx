@@ -3,8 +3,8 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 export default function PageHeader({
   title,
   subtitle,
-  actions, // jei nori custom action mygtukų
-  primaryAction, // { label, onClick, icon }
+  actions, // keisti i custom buttonus
+  primaryAction, 
 }) {
   return (
     <Box sx={{ mb: 2 }}>

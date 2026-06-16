@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 import lt from "./lt.json";
 import en from "./en.json";
 
-// išsaugom pasirinkimą localStorage
+// issaugom pasirinkimą localStorage
 const savedLang = localStorage.getItem("lang");
 const browserLang = navigator.language?.toLowerCase().startsWith("lt") ? "lt" : "en";
 const defaultLang = savedLang || browserLang;
@@ -16,7 +16,7 @@ i18n.use(initReactI18next).init({
   },
   lng: defaultLang,
   fallbackLng: "en",
-  interpolation: { escapeValue: false },
+  interpolation: { escapeValue: true },
 });
 
 export default i18n;

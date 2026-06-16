@@ -14,7 +14,7 @@ const AuthContext = createContext({
 
 export function AuthProvider({ children }) {
   const [firebaseUser, setFirebaseUser] = useState(null);
-  const [profile, setProfile] = useState(null); // { role: 'admin', ... }
+  const [profile, setProfile] = useState(null); // admin
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      // Batch both updates so AdminRoute sees loading=true before profile arrives
+      // siuncia visus atnaujinimus i AdminRoute perkelia i loading
       setFirebaseUser(user);
       setLoading(true);
 
@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
+// nekeicia busenos        patikrinti rules paketa!!!
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {

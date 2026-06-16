@@ -9,7 +9,7 @@ const LS_ENABLED = "pushNotificationsEnabled";
 
 function getPermissionState() {
   if (typeof Notification === "undefined") return "unsupported";
-  return Notification.permission; // "default" | "granted" | "denied"
+  return Notification.permission; // default  granted   denied
 }
 
 export function usePushNotifications() {
@@ -21,12 +21,12 @@ export function usePushNotifications() {
   const [dismissed, setDismissed] = useState(false);
   const messagingRef = useRef(null);
 
-  // Check FCM support once on mount
+  // FCM perziura
   useEffect(() => {
     isSupported().then(setSupported);
   }, []);
 
-  // Re-read permission when the user returns to the tab (e.g. after changing browser settings)
+  // Nuskaito visor permission kai user grysta i praita page po settings keitimu
   useEffect(() => {
     const onFocus = () => {
       const p = getPermissionState();
@@ -37,7 +37,8 @@ export function usePushNotifications() {
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
-  // Listen for live permission changes via the Permissions API (Chrome/Edge)
+  // Naudota permission API listeneri pakeist permission
+  //                                                padaryti loading page nukreipim1 !!!
   useEffect(() => {
     if (!navigator.permissions) return;
     let permStatus;
@@ -110,7 +111,7 @@ export function usePushNotifications() {
     return enable();
   }, [enabled, enable, disable]);
 
-  // Show foreground notifications (tab is open and focused)
+  // Stackoverlow foreground notifications !
   useEffect(() => {
     if (!enabled || !user) return;
     let unsub = null;
@@ -119,12 +120,13 @@ export function usePushNotifications() {
       if (!msg) return;
       unsub = onMessage(msg, (payload) => {
         if (Notification.permission !== "granted") return;
-        const title = payload.notification?.title || "SolarRadar";
-        const body  = payload.notification?.body  || "";
+        const truncate = (s, max) => typeof s === "string" ? s.slice(0, max) : "";
+        const title = truncate(payload.notification?.title, 100) || "SolarRadar";
+        const body  = truncate(payload.notification?.body,  200);
         new Notification(title, {
           body,
           icon: "/favicon.ico",
-          tag:  payload.data?.reportId || "solarradar",
+          tag:  truncate(payload.data?.reportId, 64) || "solarradar",
         });
       });
     })();

@@ -1,24 +1,3 @@
-/**
- * Ataskaitos — techniko pateiktų ataskaitų sąrašas.
- *
- * Firestore duomenų modelis (techniko mobili app turi rašyti):
- * ─────────────────────────────────────────────────────────────
- * Kolekcija: reports/{reportId}
- * {
- *   jobId:           string,     // darbo ID iš jobs kolekcijos
- *   jobTitle:        string,     // darbo pavadinimas (denormalizuotas)
- *   siteId:          string,     // objekto ID iš sites kolekcijos
- *   siteName:        string,     // objekto pavadinimas (denormalizuotas)
- *   technicianId:    string,     // Firebase Auth UID
- *   technicianName:  string,     // techniko vardas (denormalizuotas)
- *   submittedAt:     Timestamp,  // kada pateikta (Timestamp)
- *   status:          "completed" | "not_completed" | "requires_maintenance",
- *   notes:           string,     // techniko pastabos
- *   photoUrls:       string[],   // nuotraukų atsisiuntimo URL iš Storage
- *                                // Storage kelias: reports/{reportId}/photos/{filename}
- * }
- */
-
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";

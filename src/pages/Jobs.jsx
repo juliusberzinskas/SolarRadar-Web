@@ -7,7 +7,8 @@ import {
   collection,
   onSnapshot,
   addDoc,
-  getDocs,
+  doc,
+  runTransaction,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
@@ -85,14 +86,14 @@ function ExpertiseCheckboxes({ value, onChange }) {
 }
 
 async function getNextJobId() {
-  const snap = await getDocs(collection(db, "jobs"));
-  let max = 0;
-  snap.forEach((d) => {
-    const jid = d.data().jobId || "";
-    const m = jid.match(/^JB(\d+)$/);
-    if (m) max = Math.max(max, parseInt(m[1], 10));
+  const counterRef = doc(db, "counters", "jobs");
+  const next = await runTransaction(db, async (tx) => {
+    const snap = await tx.get(counterRef);
+    const n = (snap.exists() ? snap.data().value : 0) + 1;
+    tx.set(counterRef, { value: n });
+    return n;
   });
-  return `JB${String(max + 1).padStart(2, "0")}`;
+  return `JB${String(next).padStart(2, "0")}`;
 }
 
 function StatusChip({ value }) {
@@ -397,7 +398,7 @@ export default function Jobs() {
         )}
       </Paper>
 
-      {/* Create job dialog */}
+      {/* sukuria darbo dialog */}
       <Dialog open={openCreate} onClose={() => setOpenCreate(false)} fullWidth maxWidth="sm">
         <DialogTitle>{t("pages.jobs.dialog.title")}</DialogTitle>
         <DialogContent>

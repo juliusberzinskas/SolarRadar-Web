@@ -50,13 +50,13 @@ import PageHeader               from "../components/PageHeader";
 
 dayjs.extend(relativeTime);
 
-// ── Colour tokens ─────────────────────────────────────────────────────────────
+// spalvu tokenai
 const C_AMBER  = "#f59e0b";
 const C_BLUE   = "#3b82f6";
 const C_GREEN  = "#22c55e";
 const C_RED    = "#ef4444";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// helpers
 function formatAgo(val, locale) {
   if (!val) return "—";
   try {
@@ -70,7 +70,7 @@ function shortName(name = "") {
   return parts.length >= 2 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : name;
 }
 
-// ── Small reusable components ─────────────────────────────────────────────────
+// stackoverlow componentai
 function StatusChip({ value }) {
   const { t } = useTranslation();
   const cfg = {
@@ -128,7 +128,7 @@ function KpiCard({ label, count, icon, accentColor, loading }) {
   );
 }
 
-// ── Chart helpers ─────────────────────────────────────────────────────────────
+// chart componentai
 function ChartPanel({ title, subtitle, children, loading, compact, sx }) {
   return (
     <Paper variant="outlined" sx={{ borderRadius: 2, p: compact ? 1.5 : 2.5, ...sx }}>
@@ -189,7 +189,7 @@ function ChartTooltip({ active, payload, label }) {
     </Paper>
   );
 }
-
+//                       Pataisyti box sonu nukirpima su situo chuinia chartu!!!!!!!!!!!!!!!!
 function DonutChart({ data, total, centerLabel }) {
   const { t } = useTranslation();
   if (!data.length) return <EmptyChart />;
@@ -219,7 +219,7 @@ function DonutChart({ data, total, centerLabel }) {
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Centre label */}
+        {/* label centro */}
         <Box
           sx={{
             position: "absolute", top: "50%", left: "50%",
@@ -234,7 +234,7 @@ function DonutChart({ data, total, centerLabel }) {
         </Box>
       </Box>
 
-      {/* Legend */}
+      {/* legend */}
       <Stack spacing={0.8} sx={{ mt: 1.5 }}>
         {data.map((item) => (
           <Stack key={item.name} direction="row" alignItems="center" gap={1}>
@@ -250,14 +250,14 @@ function DonutChart({ data, total, centerLabel }) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// main page
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
   const theme    = useTheme();
   const navigate = useNavigate();
   const locale   = i18n.language === "lt" ? "lt" : "en";
 
-  // ── Data ────────────────────────────────────────────────────────────────────
+  // data
   const [jobs,           setJobs]           = useState([]);
   const [sitesCount,     setSitesCount]     = useState(0);
   const [reports,        setReports]        = useState([]);
@@ -284,7 +284,7 @@ export default function Dashboard() {
     return () => unsub();
   }, []);
 
-  // One-time fetch of reports from the last 12 months
+  // report fetch nuo 12 men
   useEffect(() => {
     const cutoff = Timestamp.fromDate(dayjs().subtract(12, "month").toDate());
     getDocs(query(collection(db, "reports"), where("submittedAt", ">=", cutoff)))
@@ -295,7 +295,7 @@ export default function Dashboard() {
       .catch(() => setLoadingReports(false));
   }, []);
 
-  // ── KPI counts ──────────────────────────────────────────────────────────────
+  // kpi skaiciavimas
   const openCount       = useMemo(() => jobs.filter((j) => j.status === "open").length,        [jobs]);
   const inProgressCount = useMemo(() => jobs.filter((j) => j.status === "in_progress").length, [jobs]);
   const resolvedCount   = useMemo(() => jobs.filter((j) => j.status === "resolved").length,    [jobs]);
@@ -308,9 +308,9 @@ export default function Dashboard() {
     [jobs]
   );
 
-  // ── Chart data ──────────────────────────────────────────────────────────────
+  // chart data ----------------------
 
-  // Chart 1 — jobs resolved per month (uses updatedAt date string on resolved jobs)
+  // Chart 1 — darbai atlikti per menesi, updateAt string
   const resolvedPerMonth = useMemo(() => {
     const months = Array.from({ length: timeRange }, (_, i) => {
       const d = dayjs().subtract(timeRange - 1 - i, "month");
@@ -326,14 +326,14 @@ export default function Dashboard() {
     return months.map(({ label, count }) => ({ month: label, count }));
   }, [jobs, timeRange, locale]);
 
-  // Chart 2 — job status donut
+  // Chart 2 — darbo status donut
   const statusChartData = useMemo(() => [
     { name: t("status.open"),        value: openCount,       color: C_AMBER },
     { name: t("status.in_progress"), value: inProgressCount, color: C_BLUE  },
     { name: t("status.resolved"),    value: resolvedCount,   color: C_GREEN },
   ].filter((d) => d.value > 0), [openCount, inProgressCount, resolvedCount, t]);
 
-  // Reports filtered to current time range (for charts 3 & 4)
+  // report filtras nuo dabartinio laiko skirtumo 3 ir 4 charts
   const filteredReports = useMemo(() => {
     const cutoff = dayjs().subtract(timeRange, "month");
     return reports.filter((r) => {
@@ -342,7 +342,7 @@ export default function Dashboard() {
     });
   }, [reports, timeRange]);
 
-  // Chart 3 — top 3 technicians by report count
+  // Chart 3 — top 3 darbuotojai pagal report count
   const topTechnicians = useMemo(() => {
     const counts = {};
     filteredReports.forEach((r) => {
@@ -354,7 +354,7 @@ export default function Dashboard() {
       .map(([name, count]) => ({ name: shortName(name), count }));
   }, [filteredReports]);
 
-  // Chart 4 — report outcomes donut
+  // Chart 4 — report rezultatu donut
   const reportOutcomes = useMemo(() => {
     const c = { completed: 0, requires_maintenance: 0, not_completed: 0 };
     filteredReports.forEach((r) => { if (r.status in c) c[r.status]++; });
@@ -367,7 +367,7 @@ export default function Dashboard() {
 
   const loading = loadingJobs || loadingSites;
 
-  // ── Axis/grid theme colours ──────────────────────────────────────────────────
+  // grid colors
   const axisColor  = theme.palette.text.secondary;
   const gridColor  = theme.palette.divider;
 
@@ -378,7 +378,7 @@ export default function Dashboard() {
         subtitle={t("pages.dashboard.subtitle")}
       />
 
-      {/* ── KPI cards ── */}
+      {/* ── KPI charts */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <KpiCard label={t("pages.dashboard.kpi.open")}        count={openCount}       icon={<AssignmentLateIcon fontSize="inherit" />}     accentColor={C_AMBER}  loading={loading} />
@@ -394,9 +394,9 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
-      {/* ── Charts section ── */}
+      {/* ── char section ── */}
       <Box sx={{ mb: 3 }}>
-        {/* Section header */}
+        {/* antros section header */}
         <Stack
           direction="row"
           alignItems={{ xs: "flex-start", sm: "center" }}
@@ -428,7 +428,7 @@ export default function Dashboard() {
         {/* ── Row 1 ── */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
 
-          {/* Chart 1 — Jobs Resolved per Month */}
+          {/* Chart 1 — atlikti darbai per menesi */}
           <Grid size={{ xs: 12, md: 8 }}>
             <ChartPanel
               title={t("pages.dashboard.charts.resolvedPerMonth.title")}
@@ -474,7 +474,7 @@ export default function Dashboard() {
             </ChartPanel>
           </Grid>
 
-          {/* Chart 2 — Job Status Donut */}
+          {/* Chart 2 — darbu donut statas */}
           <Grid size={{ xs: 12, md: 4 }}>
             <ChartPanel
               title={t("pages.dashboard.charts.statusBreakdown.title")}
@@ -494,7 +494,7 @@ export default function Dashboard() {
         {/* ── Row 2 ── */}
         <Grid container spacing={2}>
 
-          {/* Chart 3 — Top 3 Technicians (horizontal bar) */}
+          {/* Chart 3 — top 3 darbuotojai, horizontal linas */}
           <Grid size={{ xs: 12, md: 8 }}>
             <ChartPanel
               title={t("pages.dashboard.charts.topTechnicians.title")}
@@ -553,7 +553,7 @@ export default function Dashboard() {
             </ChartPanel>
           </Grid>
 
-          {/* Chart 4 — Report Outcomes Donut */}
+          {/* Chart 4 — reportu rezultatu donut */}
           <Grid size={{ xs: 12, md: 4 }}>
             <ChartPanel
               title={t("pages.dashboard.charts.reportOutcomes.title")}
@@ -570,7 +570,7 @@ export default function Dashboard() {
         </Grid>
       </Box>
 
-      {/* ── Recent jobs list ── */}
+      {/* ── paskutinio darbu list ── */}
       <Paper variant="outlined" sx={{ borderRadius: 2 }}>
         <Box sx={{ px: 2.5, py: 1.8 }}>
           <Typography fontWeight={700} fontSize="0.95rem">
@@ -612,7 +612,7 @@ export default function Dashboard() {
                     onClick={() => navigate(`/jobs/${job.id}`)}
                     sx={{ px: 2.5, py: 1.4, gap: 1 }}
                   >
-                    {/* Left: site + time */}
+                    {/* Left: projektas su laiku */}
                     <ListItemText
                       primary={
                         <Typography fontWeight={600} fontSize="0.9rem" noWrap>
@@ -626,7 +626,7 @@ export default function Dashboard() {
                       }
                     />
 
-                    {/* Right: tech · deadline · type · status */}
+                    {/* Right: M56rchuinia su tech deadlinu priskirtu tipu satus */}
                     <Stack direction="row" alignItems="center" spacing={0.7} sx={{ flexShrink: 0 }}>
                       {job.assignedName && (
                         <Chip

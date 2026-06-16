@@ -1,0 +1,42 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function role() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return request.auth != null && role() in ["admin", "superadmin"];
+    }
+
+    // Job attachments — admins full access, demo blocked (can't verify isDemo flag in storage)
+    match /jobs/{jobId}/attachments/{filename} {
+      allow read: if isAdmin();
+      allow write, delete: if isAdmin();
+    }
+
+    // Site photos — admins full access
+    match /sites/{siteId}/photos/{filename} {
+      allow read: if isAdmin();
+      allow write, delete: if isAdmin();
+    }
+
+    // Technician profile photos — admins can manage, technician can update own
+    match /technicians/{uid}/photo {
+      allow read: if isAdmin()
+                     || (request.auth != null && request.auth.uid == uid);
+      allow write: if isAdmin()
+                      || (request.auth != null && request.auth.uid == uid
+                          && request.resource.contentType.matches("image/.*")
+                          && request.resource.size < 5 * 1024 * 1024);
+      allow delete: if isAdmin();
+    }
+
+    // Deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

@@ -1,4 +1,6 @@
 import { useCallback, useRef, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../firebase";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -37,7 +39,7 @@ import {
   validateRows,
 } from "../utils/importUtils";
 
-// ── Column definitions for preview grids ────────────────────────────────────
+// ── column priskirimas grids perziura
 
 function makeColumns(headers) {
   return headers.map((h) => ({
@@ -52,7 +54,7 @@ function makeColumns(headers) {
 const SITES_COLUMNS  = makeColumns(SITES_HEADERS);
 const MEMBERS_COLUMNS = makeColumns(MEMBERS_HEADERS);
 
-// ── Step 1: choose type ───────────────────────────────────────────────────────
+// ── Step 1: tipo pasirinkimas
 
 function ChooseType({ onSelect }) {
   const { t } = useTranslation();
@@ -91,7 +93,7 @@ function ChooseType({ onSelect }) {
   );
 }
 
-// ── Step 2: upload + preview ──────────────────────────────────────────────────
+// ── Step 2: ikelimas su perziura
 
 function UploadStep({ type, rows, validationErrors, onFileChange, onBack }) {
   const { t } = useTranslation();
@@ -129,18 +131,18 @@ function UploadStep({ type, rows, validationErrors, onFileChange, onBack }) {
         {t("pages.import.step2.subtitle")}
       </Typography>
 
-      {/* Template download */}
+      {/* excel parsisiuntimas */}
       <Button
         variant="outlined"
         size="small"
         startIcon={<DownloadIcon />}
-        onClick={() => downloadTemplate(type)}
+        onClick={() => { downloadTemplate(type).catch(console.error); }}
         sx={{ mb: 3 }}
       >
         {t("pages.import.downloadTemplate")}
       </Button>
 
-      {/* Drop zone */}
+      {/* ikelimas */}
       <Paper
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
@@ -174,7 +176,7 @@ function UploadStep({ type, rows, validationErrors, onFileChange, onBack }) {
         />
       </Paper>
 
-      {/* Validation errors */}
+      {/* stackoverlow validation */}
       {validationErrors.length > 0 && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
@@ -193,7 +195,7 @@ function UploadStep({ type, rows, validationErrors, onFileChange, onBack }) {
         </Alert>
       )}
 
-      {/* Preview grid */}
+      {/* ikelto excel perziura */}
       {rows.length > 0 && (
         <Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -221,7 +223,7 @@ function UploadStep({ type, rows, validationErrors, onFileChange, onBack }) {
   );
 }
 
-// ── Step 3: result ────────────────────────────────────────────────────────────
+// Step 3: rezultatai ir page perejimas
 
 function ResultStep({ result, type, onReset }) {
   const { t } = useTranslation();
@@ -258,7 +260,7 @@ function ResultStep({ result, type, onReset }) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// Main page 
 
 const STEPS_KEYS = [
   "pages.import.steps.chooseType",
@@ -301,13 +303,18 @@ export default function Import() {
   const handleImport = async () => {
     setImporting(true);
     try {
-      const res = type === "sites"
-        ? await importSites(rows)
-        : await importMembers(rows);
+      let res;
+      if (type === "sites") {
+        res = await importSites(rows);
+      } else {
+        const snap = await getDocs(collection(db, "users"));
+        const existingEmails = snap.docs.map((d) => d.data().email).filter(Boolean);
+        res = await importMembers(rows, existingEmails);
+      }
       setResult(res);
       setStep(2);
     } catch (e) {
-      setParseError(e.message);
+      setParseError(e.message ?? "Import failed");
     } finally {
       setImporting(false);
     }

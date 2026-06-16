@@ -18,7 +18,7 @@ import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
-// Map Firebase error codes to readable Lithuanian messages
+// firebase error codes i LT
 function friendlyError(code) {
   const map = {
     "auth/invalid-credential":       "Neteisingas el. paštas arba slaptažodis.",
@@ -38,10 +38,9 @@ export default function Login() {
   const [err, setErr] = useState("");
   const [signing, setSigning] = useState(false);
 
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, isDemo, loading } = useAuth();
 
-  // Already authenticated — redirect straight to dashboard
-  if (!loading && isAdmin) {
+  if (!loading && (isAdmin || isDemo)) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -51,7 +50,7 @@ export default function Login() {
     setSigning(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // No navigate() needed — isAdmin becoming true above fires the redirect
+      // is admin true nukreipia, nereikia navigate()
     } catch (error) {
       setErr(friendlyError(error.code));
       setSigning(false);
@@ -79,7 +78,7 @@ export default function Login() {
           overflow: "hidden",
         }}
       >
-        {/* Top accent bar */}
+        {/* top bar isvaisd */}
         <Box
           sx={{
             height: 6,

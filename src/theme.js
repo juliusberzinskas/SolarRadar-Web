@@ -33,14 +33,14 @@ export function createAppTheme(dark) {
     },
 
     components: {
-      // ── Global ────────────────────────────────────────────────────────────────
+      // Global ----------------------------------
       MuiCssBaseline: {
         styleOverrides: {
           body: { transition: "background-color 0.25s ease" },
         },
       },
 
-      // ── Paper / Card ──────────────────────────────────────────────────────────
+      // Card (popierinia ir korteles) -----------------------------
       MuiPaper: {
         styleOverrides: {
           root: {
@@ -68,7 +68,7 @@ export function createAppTheme(dark) {
         },
       },
 
-      // ── Buttons ───────────────────────────────────────────────────────────────
+      // buttons ------------------------------
       MuiButton: {
         styleOverrides: {
           root: {
@@ -95,7 +95,7 @@ export function createAppTheme(dark) {
         },
       },
 
-      // ── AppBar ────────────────────────────────────────────────────────────────
+      // appBar ------------------------------------
       MuiAppBar: {
         styleOverrides: {
           root: {
@@ -115,7 +115,7 @@ export function createAppTheme(dark) {
         },
       },
 
-      // ── Dialogs ───────────────────────────────────────────────────────────────
+      // dialogs ---------------------------
       MuiDialog: {
         styleOverrides: {
           paper: dark
@@ -128,7 +128,7 @@ export function createAppTheme(dark) {
         },
       },
 
-      // ── Inputs ────────────────────────────────────────────────────────────────
+      // overad inputs -------------------
       MuiOutlinedInput: {
         styleOverrides: {
           notchedOutline: dark
@@ -144,7 +144,7 @@ export function createAppTheme(dark) {
         },
       },
 
-      // ── Misc ──────────────────────────────────────────────────────────────────
+      // misc -------------------------------------- 
       MuiDivider: {
         styleOverrides: {
           root: dark ? { borderColor: "rgba(255,255,255,0.08)" } : {},

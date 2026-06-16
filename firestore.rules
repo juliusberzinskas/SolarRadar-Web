@@ -2,58 +2,103 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
+    // Reads the caller's role from users collection (used in other rules)
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
     function isAdmin() {
-      return isSignedIn() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-          in ["admin", "superadmin"];
+      return request.auth != null && role() in ["admin", "superadmin"];
+    }
+
+    function isSuperAdmin() {
+      return request.auth != null && role() == "superadmin";
     }
 
     function isDemo() {
-      return isSignedIn() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "demo";
+      return request.auth != null && role() == "demo";
+    }
+
+    function isTechnician() {
+      return request.auth != null && role() == "technician";
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
     }
 
     // ── users ────────────────────────────────────────────────────────────────
-    // Admins: full access.
-    // Technicians: read own profile only (mobile app needs this to load their data).
-    match /users/{userId} {
-      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      allow write: if isAdmin();
+    match /users/{uid} {
+      // Any authenticated user can read their own profile (needed on login)
+      // Demo users can only read their own profile — not other users' PII
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Admins create new user docs (after Cloud Function creates the Auth account)
+      allow create: if isAdmin();
+
+      // Technicians can update only their own doc, and only safe fields
+      // (fcmTokens for push notifications, photoUrl)
+      allow update: if isOwner(uid) && isTechnician()
+                       && request.resource.data.diff(resource.data).affectedKeys()
+                            .hasOnly(["fcmTokens", "photoUrl"])
+                    || isAdmin();
+
+      // Only superadmins can delete user docs (prevents admin → superadmin deletion)
+      allow delete: if isSuperAdmin()
+                       && uid != request.auth.uid  // cannot delete self
+                       && resource.data.role != "superadmin"; // cannot delete other superadmins
+    }
+
+    // ── jobs ─────────────────────────────────────────────────────────────────
+    match /jobs/{jobId} {
+      // Admins read all jobs; demo only reads jobs seeded as demo data
+      allow read: if isAdmin();
+      allow read: if isDemo() && resource.data.isDemo == true;
+
+      // Technicians can only read jobs assigned to them
+      allow read: if isTechnician()
+                     && resource.data.assignedTo == request.auth.uid;
+
+      // Only admins can create/update/delete jobs
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ── sites ─────────────────────────────────────────────────────────────────
-    // Admins: full access.
-    // Technicians: read only (mobile app shows site details for assigned jobs).
     match /sites/{siteId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow read: if isAdmin() || isTechnician();
+      allow read: if isDemo() && resource.data.isDemo == true;
+      allow create, update, delete: if isAdmin();
     }
 
-    // ── jobs ──────────────────────────────────────────────────────────────────
-    // Admins: full access.
-    // Technicians: read only (mobile app shows assigned jobs).
-    match /jobs/{jobId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+    // ── counters ─────────────────────────────────────────────────────────────
+    // Atomic ID counters — admins read/write, no client-visible data
+    match /counters/{counter} {
+      allow read, write: if isAdmin();
     }
 
     // ── reports ───────────────────────────────────────────────────────────────
-    // Admins: full access.
-    // Technicians: create new reports + read/update their own reports only.
-    // Demo users: read only (no writes).
     match /reports/{reportId} {
-      allow read, write: if isAdmin();
-      allow create: if isSignedIn() && !isDemo();
-      allow read, update: if isSignedIn() && !isDemo() && resource.data.technicianId == request.auth.uid;
+      // Admins read all reports; demo only reads reports seeded as demo data
+      allow read: if isAdmin();
+      allow read: if isDemo() && resource.data.isDemo == true;
+
+      // Technicians can read and write only their own reports
+      allow read: if isTechnician()
+                     && resource.data.technicianId == request.auth.uid;
+
+      // Technicians create reports — technicianId must match their own uid
+      allow create: if isTechnician()
+                       && request.resource.data.technicianId == request.auth.uid;
+
+      // Technicians can update their own reports (e.g. editedAt); admins can add notes
+      allow update: if isTechnician()
+                       && resource.data.technicianId == request.auth.uid
+                    || isAdmin();
+
+      // Only admins can delete reports
+      allow delete: if isAdmin();
     }
 
-    // Deny everything not explicitly covered above.
-    match /{document=**} {
-      allow read, write: if false;
-    }
   }
 }

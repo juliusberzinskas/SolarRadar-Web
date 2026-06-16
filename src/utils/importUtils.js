@@ -1,10 +1,10 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import {
   collection,
-  getDocs,
   serverTimestamp,
   writeBatch,
   doc,
+  runTransaction,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -17,42 +17,76 @@ export const VALID_REGIONS = [
 ];
 export const VALID_EXPERTISE = ["electrician", "inv_elect", "mount_spec", "panel_spec"];
 
-// ── Template download ─────────────────────────────────────────────────────────
+// excel template parsisiuntimas --------------------
 
-export function downloadTemplate(type) {
+export async function downloadTemplate(type) {
   const headers = type === "sites" ? SITES_HEADERS : MEMBERS_HEADERS;
   const examples = type === "sites"
     ? [["Saules Parkas", "Kauno g. 1, Kaunas", "Kaunas", 250, "active"]]
     : [["Jonas Jonaitis", "jonas@example.com", "2023-01-15", "true", "electrician,mount_spec"]];
 
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...examples]);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, type === "sites" ? "Sites" : "Members");
-  XLSX.writeFile(wb, `${type}_template.xlsx`);
-}
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(type === "sites" ? "Sites" : "Members");
+  ws.addRow(headers);
+  examples.forEach((row) => ws.addRow(row));
 
-// ── File parsing ──────────────────────────────────────────────────────────────
-
-export function parseFile(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, { type: "array" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
-        resolve(rows);
-      } catch {
-        reject(new Error("Could not read file. Make sure it is a valid CSV or Excel file."));
-      }
-    };
-    reader.onerror = () => reject(new Error("Failed to read file."));
-    reader.readAsArrayBuffer(file);
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${type}_template.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
-// ── Validation ────────────────────────────────────────────────────────────────
+// file parsing ---------------------
+
+export async function parseFile(file) {
+  try {
+    const buffer = await file.arrayBuffer();
+    const wb = new ExcelJS.Workbook();
+
+    if (file.name.toLowerCase().endsWith(".csv")) {
+      const text = new TextDecoder().decode(buffer);
+      const lines = text.split(/\r?\n/).filter((l) => l.trim());
+      if (lines.length < 2) return [];
+      const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+      return lines.slice(1).map((line) => {
+        const vals = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = vals[i] ?? ""; });
+        return obj;
+      });
+    }
+
+    await wb.xlsx.load(buffer);
+    const ws = wb.worksheets[0];
+    if (!ws) throw new Error("No worksheet found.");
+
+    const headers = [];
+    const rows = [];
+    ws.eachRow((row, rowNum) => {
+      const vals = row.values.slice(1).map((v) =>
+        v === null || v === undefined ? "" : String(v)
+      );
+      if (rowNum === 1) {
+        headers.push(...vals);
+      } else {
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = vals[i] ?? ""; });
+        rows.push(obj);
+      }
+    });
+    return rows;
+  } catch {
+    throw new Error("Could not read file. Make sure it is a valid CSV or Excel file.");
+  }
+}
+
+// validacija -------------------------------
 
 export function validateSiteRow(row, idx) {
   const errors = [];
@@ -89,34 +123,24 @@ export function validateRows(type, rows) {
   return rows.map((r, i) => fn(r, i)).filter(Boolean);
 }
 
-// ── Sequential ID helpers ─────────────────────────────────────────────────────
+// tikrinimas pagal ID 01,02.... ------------------------------------
 
-async function getNextSiteId() {
-  const snap = await getDocs(collection(db, "sites"));
-  const nums = snap.docs
-    .map((d) => d.data().siteId)
-    .filter((id) => /^\d+$/.test(id))
-    .map((id) => parseInt(id, 10));
-  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-  return String(next).padStart(3, "0");
+async function reserveIds(counterName, count) {
+  const counterRef = doc(db, "counters", counterName);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(counterRef);
+    const current = snap.exists() ? snap.data().value : 0;
+    tx.set(counterRef, { value: current + count });
+    return current + 1;
+  });
 }
 
-async function getNextMemberId() {
-  const snap = await getDocs(collection(db, "users"));
-  const nums = snap.docs
-    .map((d) => d.data().memberId)
-    .filter((id) => /^SR\d+$/.test(id))
-    .map((id) => parseInt(id.slice(2), 10));
-  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-  return `SR${String(next).padStart(2, "0")}`;
-}
-
-// ── Firestore batch import ────────────────────────────────────────────────────
+// importai is firestore batch
 
 const BATCH_SIZE = 490;
 
 export async function importSites(rows) {
-  let startId = parseInt(await getNextSiteId(), 10);
+  let startId = await reserveIds("sites", rows.length);
   let imported = 0;
   const errors = [];
 
@@ -150,31 +174,21 @@ export async function importSites(rows) {
   return { imported, errors };
 }
 
-export async function importMembers(rows) {
-  const snap = await getDocs(collection(db, "users"));
-  const existingEmails = new Set(snap.docs.map((d) => d.data().email?.toLowerCase()));
+export async function importMembers(rows, existingEmails) {
+  const emailSet = new Set((existingEmails || []).map((e) => e.toLowerCase()));
 
-  let startNum = (() => {
-    const nums = snap.docs
-      .map((d) => d.data().memberId)
-      .filter((id) => /^SR\d+$/.test(id))
-      .map((id) => parseInt(id.slice(2), 10));
-    return nums.length > 0 ? Math.max(...nums) + 1 : 1;
-  })();
+  const newRows = rows.filter((row) => !emailSet.has(String(row.email || "").trim().toLowerCase()));
+  const skipped = rows.length - newRows.length;
+
+  let startNum = newRows.length > 0 ? await reserveIds("members", newRows.length) : 1;
 
   let imported = 0;
   const errors = [];
-  const skipped = [];
 
-  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-    const chunk = rows.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < newRows.length; i += BATCH_SIZE) {
+    const chunk = newRows.slice(i, i + BATCH_SIZE);
     const batch = writeBatch(db);
     for (const row of chunk) {
-      const email = String(row.email || "").trim().toLowerCase();
-      if (existingEmails.has(email)) {
-        skipped.push(email);
-        continue;
-      }
       try {
         const memberId = `SR${String(startNum).padStart(2, "0")}`;
         startNum++;
@@ -188,7 +202,7 @@ export async function importMembers(rows) {
         batch.set(ref, {
           memberId,
           displayName: String(row.displayName || "").trim(),
-          email,
+          email: String(row.email || "").trim().toLowerCase(),
           role: "technician",
           active: String(row.active).toLowerCase() !== "false",
           hiredAt: String(row.hiredAt || "").trim() || null,
@@ -196,7 +210,6 @@ export async function importMembers(rows) {
           photoUrl: null,
           createdAt: serverTimestamp(),
         });
-        existingEmails.add(email);
         imported++;
       } catch (e) {
         errors.push(`Row ${i + 1}: ${e.message}`);
@@ -204,5 +217,5 @@ export async function importMembers(rows) {
     }
     await batch.commit();
   }
-  return { imported, skipped: skipped.length, errors };
+  return { imported, skipped, errors };
 }

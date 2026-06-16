@@ -3,7 +3,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp }      = require("firebase-admin/app");
-const { getAuth }            = require("firebase-admin/auth");
+const { getAuth }            = require("firebase-admin/auth");  // Pataisyti veliau, kad siustu password naujam useriui 
 const { getMessaging }       = require("firebase-admin/messaging");
 const { getFirestore }       = require("firebase-admin/firestore");
 
@@ -17,9 +17,11 @@ async function requireAdmin(request) {
     throw new HttpsError("permission-denied", "Admin access required.");
 }
 
-// ── Callable: create Firebase Auth user (avoids signing out the current admin) ─
+const ALLOWED_ORIGINS = ["https://solarradar-8882e.web.app", "https://solarradar-8882e.firebaseapp.com"];
+
+// Sukuria Auth useri
 exports.createAuthUser = onCall(
-  { region: "europe-west1" },
+  { region: "europe-west1", cors: ALLOWED_ORIGINS, invoker: "public" },
   async (request) => {
     await requireAdmin(request);
 
@@ -39,26 +41,33 @@ exports.createAuthUser = onCall(
   }
 );
 
-// ── Callable: delete Firebase Auth user ──────────────────────────────────────
+// istrina Auth useri
 exports.deleteAuthUser = onCall(
-  { region: "europe-west1" },
+  { region: "europe-west1", cors: ALLOWED_ORIGINS, invoker: "public" },
   async (request) => {
     await requireAdmin(request);
 
     const { uid } = request.data;
     if (!uid) throw new HttpsError("invalid-argument", "uid is required.");
 
+    if (uid === request.auth.uid)
+      throw new HttpsError("failed-precondition", "Cannot delete your own account.");
+
+    const targetSnap = await getFirestore().collection("users").doc(uid).get();
+    if (targetSnap.data()?.role === "superadmin")
+      throw new HttpsError("permission-denied", "Cannot delete a superadmin account.");
+
     try {
       await getAuth().deleteUser(uid);
       return { success: true };
     } catch (err) {
-      console.error("deleteAuthUser error:", err);
-      throw new HttpsError("internal", err.message);
+      if (err.code !== "auth/user-not-found") throw new HttpsError("internal", err.message);
+      return { success: true };
     }
   }
 );
 
-// ── Shared: send FCM to all admins ────────────────────────────────────────────
+// Cloud messages siuncia visim admin
 async function notifyAdmins({ title, body, link, reportId }) {
   const db = getFirestore();
 
@@ -88,7 +97,7 @@ async function notifyAdmins({ title, body, link, reportId }) {
     },
   });
 
-  // Remove tokens that are no longer valid
+  // tokenu trinims
   const dead = new Set();
   response.responses.forEach((r, i) => { if (!r.success) dead.add(tokens[i]); });
   if (dead.size === 0) return;
@@ -101,7 +110,7 @@ async function notifyAdmins({ title, body, link, reportId }) {
   }
 }
 
-// ── Scheduled: delete archived jobs older than 14 days (runs daily at 03:00) ──
+// archivu trinimas (14 dienu)
 exports.cleanupArchivedJobs = onSchedule(
   { schedule: "0 3 * * *", timeZone: "Europe/Vilnius", region: "europe-west1" },
   async () => {
@@ -127,7 +136,7 @@ exports.cleanupArchivedJobs = onSchedule(
   }
 );
 
-// ── Firestore trigger: new report submitted ───────────────────────────────────
+// reportai is appso 
 exports.notifyAdminOnReportSubmit = onDocumentCreated(
   { document: "reports/{reportId}", region: "europe-west1" },
   async (event) => {
@@ -141,14 +150,16 @@ exports.notifyAdminOnReportSubmit = onDocumentCreated(
   }
 );
 
-// ── Firestore trigger: technician edited a report ─────────────────────────────
+// appso userio reporto editas
 exports.notifyAdminOnReportEdit = onDocumentUpdated(
   { document: "reports/{reportId}", region: "europe-west1" },
   async (event) => {
     const before = event.data.before.data();
     const after  = event.data.after.data();
 
-    // Only fire when the technician's editedAt timestamp actually changed
+    // siuncia jei keiciasi editedAt
+
+    // Pakeisti su listeneriu veliau
     const tsBefore = before.editedAt?.toMillis?.() ?? null;
     const tsAfter  = after.editedAt?.toMillis?.()  ?? null;
     if (!tsAfter || tsAfter === tsBefore) return;

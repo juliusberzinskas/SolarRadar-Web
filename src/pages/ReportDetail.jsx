@@ -148,22 +148,22 @@ function InfoTab({ report, reportId }) {
         )}
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-        <Typography fontWeight={700} sx={{ mb: 0.5 }}>{t("pages.reportDetail.adminNotes.title")}</Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
-          {t("pages.reportDetail.adminNotes.hint")}
-        </Typography>
-        <TextField
-          value={adminNotes}
-          onChange={(e) => setAdminNotes(e.target.value)}
-          multiline
-          minRows={3}
-          fullWidth
-          placeholder={t("pages.reportDetail.adminNotes.placeholder")}
-        />
-        {saveError && <Alert severity="error" sx={{ mt: 1.5 }}>{saveError}</Alert>}
-        {saved && <Alert severity="success" sx={{ mt: 1.5 }}>{t("common.savedOk")}</Alert>}
-        {!isDemo && (
+      {!isDemo && (
+        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+          <Typography fontWeight={700} sx={{ mb: 0.5 }}>{t("pages.reportDetail.adminNotes.title")}</Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+            {t("pages.reportDetail.adminNotes.hint")}
+          </Typography>
+          <TextField
+            value={adminNotes}
+            onChange={(e) => setAdminNotes(e.target.value)}
+            multiline
+            minRows={3}
+            fullWidth
+            placeholder={t("pages.reportDetail.adminNotes.placeholder")}
+          />
+          {saveError && <Alert severity="error" sx={{ mt: 1.5 }}>{saveError}</Alert>}
+          {saved && <Alert severity="success" sx={{ mt: 1.5 }}>{t("common.savedOk")}</Alert>}
           <Box sx={{ mt: 2 }}>
             <Button
               variant="contained"
@@ -174,8 +174,8 @@ function InfoTab({ report, reportId }) {
               {saving ? t("common.saving") : t("pages.reportDetail.adminNotes.save")}
             </Button>
           </Box>
-        )}
-      </Paper>
+        </Paper>
+      )}
     </Stack>
   );
 }

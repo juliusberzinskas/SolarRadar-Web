@@ -10,3 +10,7 @@ export default function AdminRoute({ children }) {
 
   return children;
 }
+
+
+
+// prideti veliau loading vaizda !!!!!!!!!

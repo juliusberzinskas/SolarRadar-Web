@@ -60,7 +60,7 @@ import PageHeader from "../components/PageHeader";
 import FilterBar from "../components/FilterBar";
 import { useAuth } from "../contexts/AuthContext";
 
-// ─── Expertise config ─────────────────────────────────────────────────────────
+// visi darbo patirties keitimai
 export const EXPERTISE_KEYS = ["electrician", "inv_elect", "mount_spec", "panel_spec"];
 
 function getInitials(str) {
@@ -155,7 +155,7 @@ const emptyAdminForm = () => ({
 const createAuthUser = httpsCallable(functions, "createAuthUser");
 const deleteAuthUserFn = httpsCallable(functions, "deleteAuthUser");
 
-// Returns next sequential member ID like SR01, SR02, SR03 ...
+// Grazina member ID pagal counta 01,02,03
 async function getNextMemberId() {
   const snap = await getDocs(collection(db, "users"));
   const nums = snap.docs
@@ -166,7 +166,7 @@ async function getNextMemberId() {
   return `SR${String(next).padStart(2, "0")}`;
 }
 
-// ─── Technicians tab ──────────────────────────────────────────────────────────
+// darbuotojo tabai
 
 function TechniciansTab() {
   const { t } = useTranslation();
@@ -340,6 +340,11 @@ function TechniciansTab() {
 
   const handleUpdate = async () => {
     setSaveError("");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (form.email && !emailRegex.test(form.email.trim())) {
+      setSaveError("Invalid email address.");
+      return;
+    }
     try {
       await updateDoc(doc(db, "users", editingRow.id), {
         displayName: form.displayName,
@@ -357,7 +362,7 @@ function TechniciansTab() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      // Delete Firestore profile
+      // perm istrina firestore accounta
       await deleteDoc(doc(db, "users", editingRow.id));
 
       await deleteAuthUserFn({ uid: editingRow.id });
@@ -464,7 +469,7 @@ function TechniciansTab() {
         </Paper>
       </Box>
 
-      {/* Create dialog */}
+      {/* sukuria dialog */}
       <Dialog open={openCreate} onClose={() => setOpenCreate(false)} fullWidth maxWidth="sm">
         <DialogTitle>{t("pages.members.dialog.createTech")}</DialogTitle>
         <DialogContent>
@@ -525,7 +530,7 @@ function TechniciansTab() {
               {t("pages.members.dialog.idLabel")}<b>{editingRow?.memberId ?? editingRow?.id}</b>
             </Typography>
 
-            {/* Profile photo upload */}
+            {/* accounto foto ikelimas */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Avatar
                 src={editingRow?.photoUrl || undefined}
@@ -615,7 +620,7 @@ function TechniciansTab() {
         </DialogActions>
       </Dialog>
 
-      {/* Delete confirmation dialog */}
+      {/* istrina patvirtinimo dialog */}
       <Dialog open={openDelete} onClose={() => setOpenDelete(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ color: "error.main" }}>Delete technician?</DialogTitle>
         <DialogContent>
@@ -662,7 +667,7 @@ function TechniciansTab() {
   );
 }
 
-// ─── Administrators tab (superadmin only) ─────────────────────────────────────
+// superadmin ------------------------------
 
 function AdminsTab() {
   const { t } = useTranslation();
@@ -813,7 +818,7 @@ function AdminsTab() {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// pagr page ---------------------------
 
 export default function Members() {
   const { isSuperAdmin } = useAuth();

@@ -23,7 +23,7 @@ export default function App() {
         {/* Public route */}
         <Route path="/login" element={<Login />} />
 
-        {/* All admin pages — protected by AdminRoute */}
+        {/* visi admin puslapiai saugomi AdminRoute */}
         <Route
           element={
             <AdminRoute>

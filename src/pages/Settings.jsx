@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Alert,
   Box,
@@ -31,6 +32,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { darkMode, toggleDarkMode } = useAppTheme();
   const { supported, permission, enabled, loading, dismissed, toggle } = usePushNotifications();
+  const { isDemo } = useAuth();
   const [lang, setLang] = useState(i18n.language || "en");
 
   const handleLogout = async () => {
@@ -96,8 +98,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* ── Push Notifications ── */}
-        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+        {/* ── Push Notifications — hidden for demo accounts ── */}
+        {!isDemo && <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography fontWeight={800} sx={{ mb: 2 }}>
               {t("pages.settings.notifications.title")}
@@ -140,9 +142,9 @@ export default function Settings() {
               </Stack>
             )}
           </CardContent>
-        </Card>
+        </Card>}
 
-        {/* ── Language ── */}
+        {/* ── kalba ── */}
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography fontWeight={800} sx={{ mb: 1 }}>
@@ -166,7 +168,7 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* ── Account ── */}
+        {/* ── accountas ── */}
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography fontWeight={800} sx={{ mb: 1 }}>

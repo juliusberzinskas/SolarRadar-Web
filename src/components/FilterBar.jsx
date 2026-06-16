@@ -1,6 +1,7 @@
 import { Box, Button, Paper, Stack, TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+// priklauso visiem page
 export default function FilterBar({ search, onSearchChange, children, onReset }) {
   const { t } = useTranslation();
 

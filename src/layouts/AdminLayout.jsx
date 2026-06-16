@@ -39,7 +39,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 const drawerWidth = 260;
 
-// ── Sidebar colours (sidebar is always dark in both modes) ────────────────────
+// left meniu spalvos
 const MENU_TEXT        = "rgba(255,255,255,0.72)";
 const MENU_TEXT_ACTIVE = "#ffffff";
 const MENU_ICON        = "rgba(255,255,255,0.48)";
@@ -48,7 +48,6 @@ const MENU_HOVER_BG    = "rgba(255,255,255,0.06)";
 const MENU_ACTIVE_BG   = "rgba(96,165,250,0.14)";
 const MENU_ACTIVE_LINE = "#3b82f6";
 const SIDEBAR_DIVIDER  = "rgba(255,255,255,0.08)";
-// ─────────────────────────────────────────────────────────────────────────────
 
 const menuItems = [
   { labelKey: "menu.dashboard", path: "/dashboard", icon: <DashboardIcon /> },
@@ -74,7 +73,7 @@ function useNewReportsCount() {
   const [count, setCount] = React.useState(0);
   const location = useLocation();
 
-  // Mark as seen when on the reports page
+  // uzmarkina as seen reports page
   React.useEffect(() => {
     if (location.pathname === "/reports") {
       localStorage.setItem(LS_KEY, new Date().toISOString());
@@ -82,7 +81,7 @@ function useNewReportsCount() {
     }
   }, [location.pathname]);
 
-  // Listen to reports collection — count new submissions AND technician edits
+  // listeneris i reports f collention countina visus edit
   React.useEffect(() => {
     const unsub = onSnapshot(collection(db, "reports"), (snap) => {
       const lastSeen = localStorage.getItem(LS_KEY);
@@ -115,7 +114,7 @@ function SidebarContent({ onNavigate }) {
   const location = useLocation();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, isDemo } = useAuth();
   const newReportsCount = useNewReportsCount();
 
   const handleLogout = async () => {
@@ -136,7 +135,7 @@ function SidebarContent({ onNavigate }) {
 
       <Divider sx={{ borderColor: SIDEBAR_DIVIDER }} />
 
-      {/* ── Navigation ── */}
+      {/* ── nav ── */}
       <List sx={{ pt: 1.5, pb: 1 }}>
         {menuItems.map((item) => {
           const active = location.pathname === item.path;
@@ -194,7 +193,7 @@ function SidebarContent({ onNavigate }) {
 
       <Box sx={{ flex: 1 }} />
 
-      {/* ── User info ── */}
+      {/* ── userio info ── */}
       {user && (
         <>
           <Divider sx={{ borderColor: SIDEBAR_DIVIDER }} />
@@ -214,31 +213,33 @@ function SidebarContent({ onNavigate }) {
         </>
       )}
 
-      {/* ── Import Data button ── */}
-      <Box sx={{ px: 2, pb: 1.5 }}>
-        <ListItemButton
-          component={NavLink}
-          to="/import"
-          onClick={onNavigate}
-          sx={{
-            borderRadius: 1.5,
-            border: "1px solid rgba(96,165,250,0.30)",
-            backgroundColor: "rgba(96,165,250,0.08)",
-            "&:hover": { backgroundColor: "rgba(96,165,250,0.16)" },
-            py: 0.9,
-          }}
-        >
-          <ListItemIcon sx={{ minWidth: 36, color: "#60a5fa" }}>
-            <UploadFileIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText
-            primary={t("menu.import")}
-            primaryTypographyProps={{
-              sx: { color: "#93c5fd", fontWeight: 600, fontSize: "0.85rem" },
+      {/* ── data import buttons ── */}
+      {!isDemo && (
+        <Box sx={{ px: 2, pb: 1.5 }}>
+          <ListItemButton
+            component={NavLink}
+            to="/import"
+            onClick={onNavigate}
+            sx={{
+              borderRadius: 1.5,
+              border: "1px solid rgba(96,165,250,0.30)",
+              backgroundColor: "rgba(96,165,250,0.08)",
+              "&:hover": { backgroundColor: "rgba(96,165,250,0.16)" },
+              py: 0.9,
             }}
-          />
-        </ListItemButton>
-      </Box>
+          >
+            <ListItemIcon sx={{ minWidth: 36, color: "#60a5fa" }}>
+              <UploadFileIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary={t("menu.import")}
+              primaryTypographyProps={{
+                sx: { color: "#93c5fd", fontWeight: 600, fontSize: "0.85rem" },
+              }}
+            />
+          </ListItemButton>
+        </Box>
+      )}
 
       <Divider sx={{ borderColor: SIDEBAR_DIVIDER }} />
 
@@ -281,7 +282,7 @@ export default function AdminLayout() {
   const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
   const handleNavigate = () => { if (isMobile) setMobileOpen(false); };
 
-  // Map path → page title for the topbar
+  // map keitimas pagal puslapiio pavadinima skirtas topbar
   const PAGE_TITLES = {
     "/dashboard":  t("menu.dashboard"),
     "/sites":      t("menu.sites"),
@@ -302,7 +303,7 @@ export default function AdminLayout() {
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <CssBaseline />
 
-      {/* ── Top bar ── */}
+      {/* ── topbar ── */}
       <AppBar
         position="fixed"
         elevation={0}
@@ -344,9 +345,9 @@ export default function AdminLayout() {
         </Toolbar>
       </AppBar>
 
-      {/* ── Sidebar ── */}
+      {/* ── soninis meniu ── */}
       <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
-        {/* Mobile */}
+        {/* app */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -389,7 +390,7 @@ export default function AdminLayout() {
         </Drawer>
       </Box>
 
-      {/* ── Main content ── */}
+      {/* ── main content ── */}
       <Box
         component="main"
         sx={{
