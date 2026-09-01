@@ -91,8 +91,18 @@ reports — jobId, siteId, technicianId, submittedAt, status (completed | not_co
 
 Fields like siteName, technicianName and jobTitle are deliberately duplicated across documents. Firestore has no joins, so denormalisation is what keeps list views to a single query.
 
-Screenshots
+## Screenshots
 
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+### Employees
+![Dashboard](docs/screenshots/employees.png)
+### Job management
+![Jobs](docs/screenshots/jobs.png)
+### Technician report
+![Report](docs/screenshots/report.png)
+### Objects
+![Objects](docs/screenshots/objects.png)
 
 Requirements: Node.js 18+, a Firebase project with Authentication, Firestore, Storage and Hosting enabled.
 
