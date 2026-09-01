@@ -94,13 +94,13 @@ Fields like siteName, technicianName and jobTitle are deliberately duplicated ac
 ## Screenshots
 
 ### Dashboard
-![Dashboard](docs/screenshots/dashboard.png)
+![Dashboard](docs/screenshots/dasboard.png)
 ### Employees
 ![Dashboard](docs/screenshots/employees.png)
 ### Job management
 ![Jobs](docs/screenshots/jobs.png)
 ### Technician report
-![Report](docs/screenshots/report.png)
+![Report](docs/screenshots/reports.png)
 ### Objects
 ![Objects](docs/screenshots/objects.png)
 
