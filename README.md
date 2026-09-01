@@ -1,4 +1,4 @@
-SolarRadar — Web Admin
+# SolarRadar — Web Admin
 
 A maintenance and fault-registration system for solar power plants, built for a Lithuanian solar O&M company.
 
@@ -6,7 +6,7 @@ This repository contains the web administration panel. The companion Android app
 
 Built as my bachelor's thesis at Vilnius Business College (Programming and Internet Technologies), 2026.
 
-The problem
+# The problem
 
 Small solar O&M companies coordinate their field work on paper, in spreadsheets and over the phone. Jobs get assigned verbally, fault reports arrive as photos in a messaging app, and nobody has a single view of what is open, what is in progress and what was actually done on site.
 
@@ -14,7 +14,7 @@ I looked at what the market offers and found a gap. Monitoring platforms (SolarE
 
 SolarRadar covers the gap: site and equipment records, job assignment, real-time status tracking, and structured reports with photo evidence — in one system, for a team of a size that cannot justify enterprise software.
 
-What it does
+# What it does
 
 Dashboard — four live KPI cards (open jobs, in progress, resolved, active sites) with a priority-sorted recent jobs table. Updates without a page refresh.
 
@@ -56,7 +56,7 @@ Firebase was chosen over Supabase and a Node + PostgreSQL backend for one specif
 
 React over Vue mainly for MUI DataGrid, whose React support is the most mature — it does the heavy lifting for every list view in the app.
 
-Architecture
+# Architecture
 
 Backend-as-a-Service. Both clients talk directly to Firebase; there is no custom server.
 
@@ -77,7 +77,7 @@ Backend-as-a-Service. Both clients talk directly to Firebase; there is no custom
 
 Every list view subscribes through onSnapshot rather than polling. Listeners are unsubscribed in the React useEffect cleanup — each open listener costs Firestore reads, so leaving them attached is a real cost, not just untidy code.
 
-Data model
+# Data model
 
 Four Firestore collections:
 
@@ -121,7 +121,7 @@ Security rules are in firestore.rules and storage.rules and must be deployed for
 
 Browser support: Chrome, Firefox and Edge 100+, Safari 15+.
 
-Testing
+# Testing
 
 Manual black-box testing across 19 test cases covering four modules: authentication and role management, the admin panel, real-time synchronisation, and the Android app.
 
@@ -141,7 +141,7 @@ Note on data
 
 This repository contains no client data. The system was developed and demonstrated using generated test data only — the company's internal records were never used in the project.
 
-Author
+# Author
 
 Julius Beržinskas
 
